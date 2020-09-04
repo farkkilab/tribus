@@ -19,11 +19,11 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     entry_points={
-        "napari.plugin": [
-            "segmentation_qc = tribus.segmentation_qc",
-            "quantification_qc = tribus.quantification_qc",
-            "labels_qc = tribus.labels_qc",
-        ],
+        # "napari.plugin": [
+        #     "segmentation_qc = tribus.segmentation_qc",
+        #     "quantification_qc = tribus.quantification_qc",
+        #     "labels_qc = tribus.labels_qc",
+        # ],
         "console_scripts": [
             'tribus = tribus.module:main',
         ],

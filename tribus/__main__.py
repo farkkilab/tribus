@@ -13,6 +13,8 @@ import pkg_resources
 
 from . import utils, info
 
+def f_napari(args: argparse.Namespace):
+    utils.launch_napari(args.buttons)
 
 def f_label(args: argparse.Namespace):
     utils.set_labels(args.paths)

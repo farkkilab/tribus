@@ -10,4 +10,6 @@ tribus browse <option> <paths>
 
 tribus report <options> <paths>
 
+tribus napari <options> <paths>
+
 ## Folder structure
