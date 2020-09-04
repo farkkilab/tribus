@@ -11,3 +11,6 @@ def browse_results():
 
 def make_report():
     ''' create results folder '''
+
+def compute_neighbors():
+    ''' calculate neighbors '''
