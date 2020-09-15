@@ -12,4 +12,6 @@ tribus report <options> <paths>
 
 tribus napari <options> <paths>
 
+tribus neighbors <options> <paths>
+
 ## Folder structure
