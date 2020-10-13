@@ -20,6 +20,16 @@ def get_markers(table,level):
             
     return(used_markers)
 
+def filter_markers(cell_data_table,table,level):
+    cell_data = pd.read_csv(cell_data_table)
+    cell_data.columns = cell_data.columns.str.lower()
+    dc_casefold = [item.casefold() for item in cell_data.columns]
+    used_markers = get_markers(table,level)
+    um_casefold = [i.casefold() for i in used_markers]
+    d_used = cell_data[sorted(set(dc_casefold).intersection(um_casefold), key=dc_casefold.index)]
+    
+    return(d_used)
+
 def get_gates(table,level):
     df = pd.ExcelFile(table)
     data = pd.read_excel(df, df.sheet_names, index_col='Marker')   
