@@ -6,9 +6,9 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 3. `tribus report` will produce static figures and CSV files to be used as supplementary material or in downstream analyses.
 '''
 
-import os
-import sys
+import os, sys, datetime
 import argparse
+from pathlib import Path
 import pkg_resources
 from . import utils
 
@@ -28,25 +28,42 @@ def main(argv=None):
     # In the future also the neighbor calculations
 
     # Add parameters to each command
-    parser_classify.add_argument('-i','--input',
+    parser_classify.add_argument('-i','--input', metavar='DIR',
         help='Folder containing CSV files, one per sample')
-    parser_classify.add_argument('-l','--labels',
-        help='CSV file containing the prior knowledge of the markers and the cell type labels')
+    parser_classify.add_argument('-l','--logic', metavar='XLSX',
+        help='Excel file containing the prior knowledge of the markers and the cell type labels')
+    parser_classify.add_argument('-o','--output', metavar='DIR',
+        help='Folder to store all results of multiple runs.')
 
-    parser_preview.add_argument('-i','--input',
+    parser_preview.add_argument('-i','--input', metavar='DIR',
         help='Folder containing CSV files, one per sample')
 
-    parser_report.add_argument('-i','--results',
-        help='Ggenerate quality report after labeling')
+    parser_report.add_argument('--resultFolder', metavar='DIR',
+        help='Generate quality report after labeling')
 
     args = parser.parse_args(argv)
 
     if args.command == 'classify':
-        exit_status=utils.runClassify(args)
+        if os.path.isfile(args.logic) and os.path.isdir(args.input):
+            valid, logic = utils.validateInputs(args.input, args.logic)
+            if valid:
+                # create output dir if not present, and create a subfolder with current time stamp
+                outputFolder = os.path.join(args.output, datetime.datetime.now().strftime('%Y%m%d_%Hh%Mm'))
+                Path(outputFolder).mkdir(parents=True, exist_ok=True)
+                print(outputFolder)
+                # store the logic file in this folder
+                utils.runClassify(args.input, logic, outputFolder)
+            else:
+                print('invalid data: check logs.')
+        else:
+            print('input paths are not a directory and a file.')
+    
     if args.command == 'preview':
         print('not implemented')
     if args.command == 'report':
         print('not implemented')
     else:
-        exit_status=-2
-    sys.exit(exit_status)
+        parser.print_help()
+
+
+#EOF

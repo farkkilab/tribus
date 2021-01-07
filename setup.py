@@ -1,5 +1,16 @@
 import setuptools
 
+###
+# Test the package live with
+#   cd /tribus/
+#   python setup.py developt
+#   pip install  -e ./
+#   cd ../test data
+# tribus classify -i input_data/ -l gate_logic_1.xlsx -o test_results
+#
+#
+###
+
 requires = [
     'numpy>=1.18.1',
     'matplotlib>=3.1.2',
@@ -7,8 +18,8 @@ requires = [
     'scipy>=1.4.1',
     'scikit-image==0.16.2',
     'scikit-learn>=0.21.1',
+    'pandas',
 ]
-
 
 VERSION = '0.0.1'
 DESCRIPTION = 'Cell type based analysis of multiplexed imaging data'
