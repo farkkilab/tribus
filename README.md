@@ -4,9 +4,9 @@
 
 ## Usage instructions
 
-tribus label <options> <paths>
+tribus preview <options> <paths>
 
-tribus browse <option> <paths>
+tribus classify <options> <paths>
 
 tribus report <options> <paths>
 

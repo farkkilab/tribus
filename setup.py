@@ -1,32 +1,45 @@
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+requires = [
+    'numpy>=1.18.1',
+    'matplotlib>=3.1.2',
+    'networkx>=2.4',
+    'scipy>=1.4.1',
+    'scikit-image==0.16.2',
+    'scikit-learn>=0.21.1',
+]
+
+
+VERSION = '0.0.1'
+DESCRIPTION = 'Cell type based analysis of multiplexed imaging data'
+LONG_DESCRIPTION='''
+Tribus is a lightweight package to help analysis of multiplexed imaging data, such as cyclic immunofluorescence imaging (CyCIF). Its core functionality lies on automatic cell type assignment of large datasets via hiarchical categorization based on user-given prior knowledge from the user.
+'''
+AUTHOR = 'Julia Casado, Angela Szabo, Miikka Kilkkila'
+AUTHOR_EMAIL = 'julia.casado@helsinki.fi'
+HOMEPAGE = 'https://github.com/farkkilab/tribus'
 
 setuptools.setup(
-    name="tribus-jcasado", # Replace with your own username
-    version="0.0.1",
-    author="Julia Casado, Angela Szabo, Miikka Kilkkila",
-    author_email="julia.casado@helsinki.fi",
-    description="Cell type based analysis of multiplexed imaging data",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/farkkilab/tribus",
+    name='tribus',
+    version=VERSION,
+    description=DESCRIPTION,
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type='text/markdown',
+    url=HOMEPAGE,
     packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
-    ],
     entry_points={
-        # "napari.plugin": [
-        #     "segmentation_qc = tribus.segmentation_qc",
-        #     "quantification_qc = tribus.quantification_qc",
-        #     "labels_qc = tribus.labels_qc",
-        # ],
-        "console_scripts": [
-            'tribus = tribus.module:main',
+        'console_scripts': [
+            'tribus = tribus.tribus:main',
         ],
     },
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+        'Intended Audience :: Science/Research',
+        'Natural Language :: English',
+    ],
     python_requires='>=3.6',
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
 )
