@@ -48,11 +48,13 @@ def main(argv=None):
             valid, logic = utils.validateInputs(args.input, args.logic)
             if valid:
                 # create output dir if not present, and create a subfolder with current time stamp
-                outputFolder = os.path.join(args.output, datetime.datetime.now().strftime('%Y%m%d_%Hh%Mm'))
-                Path(outputFolder).mkdir(parents=True, exist_ok=True)
-                print(outputFolder)
+                output_folder = os.path.join(args.output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+                # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
+                Path(output_folder).mkdir(parents=True, exist_ok=True)
+                print(output_folder)
+                # TODO: test if other folders exist and if some level of labels was not changed (meanwhile it runs all the way regardless)
                 # store the logic file in this folder
-                utils.runClassify(args.input, logic, outputFolder)
+                utils.runClassify(args.input, logic, output_folder)
             else:
                 print('invalid data: check logs.')
         else:

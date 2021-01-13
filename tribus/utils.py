@@ -29,8 +29,8 @@ def validateGateLogic(excel_file):
 def validateInputs(input_folder, excel_file):
     return(validateInputData(input_folder), validateGateLogic(excel_file))
 
-def runClassify(path_in, logic, outputFolder):
-    result = classify.run(dataPaths,logic,outputFolder)
+def runClassify(path_in, logic, output_folder):
+    result = classify.run(path_in,logic,output_folder)
     
     # write CSVs
     return(True)
