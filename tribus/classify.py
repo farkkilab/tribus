@@ -53,8 +53,9 @@ def run(input_path,labels,output_folder):
     for samplefile in filenames:
         sample_data=pd.read_csv(os.path.join(input_path,samplefile))
         for level in levels:
-            if set(labels[level].index.values) <= set(dsample_dataata.columns.values):
+            if set(labels[level].index.values) <= set(sample_data.columns.values):
                 # continue here
+                return(" ")
             # Filter table to have only the correct channels
             gating_data=sample_data[sample_data.columns[sample_data.columns.isin(labels[level].index.values)]]
             gating_data=(gating_data - np.mean(gating_data, axis=0)) / np.std(gating_data, axis=0)

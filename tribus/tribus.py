@@ -5,6 +5,9 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 2. `tribus preview` launches an interactive visualization of the cell type labels across samples and helps assessing the quality of the calls with prior knowledge.
 3. `tribus report` will produce static figures and CSV files to be used as supplementary material or in downstream analyses.
 '''
+# Potential feature:
+# tribus generate-logic -i <input DIR>
+#
 
 import os, sys, datetime
 import argparse
@@ -63,7 +66,7 @@ def main(argv=None):
     if args.command == 'preview':
         print('not implemented')
     if args.command == 'report':
-        print('not implemented')
+        print('not implemented') # @mikrkilk
     else:
         parser.print_help()
 
