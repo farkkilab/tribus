@@ -50,22 +50,33 @@ def run(input_path,labels,output_folder):
 
     # Read data
     filenames=os.listdir(input_path) 
+
+    samplefile=filenames[0]
+    level=levels[0]
     for samplefile in filenames:
         sample_data=pd.read_csv(os.path.join(input_path,samplefile))
         for level in levels:
+            # Test if the gating needs columns that don't exist
             if set(labels[level].index.values) <= set(sample_data.columns.values):
-                # continue here
+                # return some error
                 return(" ")
             # Filter table to have only the correct channels
             gating_data=sample_data[sample_data.columns[sample_data.columns.isin(labels[level].index.values)]]
+            # Z-score standardization
+            # Consider if it is necessary at all, it is a super slow process that takes all the cores and all the memory
             gating_data=(gating_data - np.mean(gating_data, axis=0)) / np.std(gating_data, axis=0)
-            gating_data=gating_data.values
+            array_data=gating_data.values
             som_shape = (8, 8)
-            som = MiniSom(som_shape[0], som_shape[1], gating_data.shape[1], sigma=.5, learning_rate=.5,
+            som = MiniSom(som_shape[0], som_shape[1], array_data.shape[1], sigma=.5, learning_rate=.5,
               neighborhood_function='gaussian', random_seed=10)
 
-            som.train_batch(gating_data, 500, verbose=True)
-            som.win_map()
+            som.train_batch(array_data, 50000, verbose=True)
+            mapped_neurons=som.win_map(array_data)
+
+            winner_coordinates = np.array([som.winner(x) for x in array_data]).T
+# with np.ravel_multi_index we convert the bidimensional
+# coordinates to a monodimensional index
+cluster_index = np.ravel_multi_index(winner_coordinates, som_shape)
             
             #processLevel(level)
         # concat results: data + level1 + level2 + level3 ...

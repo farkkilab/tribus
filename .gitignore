@@ -1,3 +1,4 @@
 dist/*
 tribus.egg-info/*
-__pycache__/*
+tribus/__pycache__/*
+.idea/*

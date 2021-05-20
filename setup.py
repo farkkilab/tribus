@@ -3,7 +3,7 @@ import setuptools
 ###
 # Test the package live with
 #   cd /tribus/
-#   python setup.py developt
+#   python setup.py develop
 #   pip install  -e ./
 #   cd ../test data
 # tribus classify -i input_data/ -l gate_logic_1.xlsx -o test_results
@@ -19,6 +19,7 @@ requires = [
     'scikit-image==0.16.2',
     'scikit-learn>=0.21.1',
     'pandas',
+    'openpyxl',
 ]
 
 VERSION = '0.0.1'
