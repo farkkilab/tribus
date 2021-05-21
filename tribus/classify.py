@@ -32,17 +32,29 @@ def processLevel(level):
     '''parallelize for samples if possible'''
     # TODO: PARALLELIZE HERE
 
-    nodes = somClustering(cells)
-    scores = scoreNodes(nodes, rules)
-    labeled_data = assignLabels(scores)
-    return(labeled_data)
+    #nodes = somClustering(cells)
+    #scores = scoreNodes(nodes, rules)
+    #labeled_data = assignLabels(scores)
+    #return(labeled_data)
+    return('')
+
+def score_marker_pos(x):
+    res = [ (np.percentile(x, 95) - i)**2 for i in x]
+    return res
+
+def score_marker_neg(x):
+    res = [ (i - np.min(x))**2 for i in x]
+    return res
+
+def normalize_scores(x):
+    res = 1 - ((x - np.min(x)) / (np.max(x) - np.min(x)))
+    return res
 
 def run(input_path,labels,output_folder):
     input_path='input_data'
     logic_path='gate_logic_1.xlsx'
     output_folder='test_results'
-
-
+    
     df = pd.ExcelFile(logic_path)
     labels = pd.read_excel(df, df.sheet_names, index_col=0)
 
@@ -52,7 +64,44 @@ def run(input_path,labels,output_folder):
     filenames=os.listdir(input_path) 
 
     samplefile=filenames[0]
-    level=levels[0]
+    
+    #for samplefile in filenames:
+    sample_data=pd.read_csv(os.path.join(input_path,samplefile))
+        #for level in levels:
+    level = levels[0]
+    # Test if the gating needs columns that don't exist
+    if  set(sample_data.columns.values).issubset(set(labels[level].index.values)):
+        # return some error
+        print(labels[level].index.values)
+        print(sample_data.columns.values)
+        return("ERROR: gating columns missing")
+    # Filter table to have only the correct channels
+    level_logic_df = labels[level]
+
+    scores_matrix = np.zeros((sample_data.shape[0], labels[level].shape[1]))
+    for idx, cell_type in enumerate(labels[level].columns.values):
+        print(cell_type)
+        list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
+        list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
+        print(len(list_positive))
+        print(len(list_negative)) # launch error if length == 0
+        # For each cell type we want to build two matrices to calculate scores:
+        gating_positive = sample_data[sample_data.columns.intersection(list_positive)].to_numpy()
+        gating_negative = sample_data[sample_data.columns.intersection(list_negative)].to_numpy()
+        marker_scores_positive = np.apply_along_axis(score_marker_pos, 0, gating_positive)
+        marker_scores_negative = np.apply_along_axis(score_marker_neg, 0, gating_negative)
+        marker_scores = np.column_stack((marker_scores_positive,marker_scores_negative))
+        normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
+        scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)
+    
+        
+
+def run2(input_path,labels,output_folder):
+    levels = list(labels.keys())
+
+    # Read data
+    filenames=os.listdir(input_path) 
+
     for samplefile in filenames:
         sample_data=pd.read_csv(os.path.join(input_path,samplefile))
         for level in levels:
@@ -74,14 +123,14 @@ def run(input_path,labels,output_folder):
             mapped_neurons=som.win_map(array_data)
 
             winner_coordinates = np.array([som.winner(x) for x in array_data]).T
-# with np.ravel_multi_index we convert the bidimensional
-# coordinates to a monodimensional index
-cluster_index = np.ravel_multi_index(winner_coordinates, som_shape)
+            # with np.ravel_multi_index we convert the bidimensional
+            # coordinates to a monodimensional index
+            cluster_index = np.ravel_multi_index(winner_coordinates, som_shape)
             
             #processLevel(level)
         # concat results: data + level1 + level2 + level3 ...
         # return(results)
         # write CSV files in result folder
-
+# EOF
         
     

@@ -1,7 +1,7 @@
 import setuptools
 
 ###
-# Test the package live with
+# Test the package live on anaconda prompt with:
 #   cd /tribus/
 #   python setup.py develop
 #   pip install  -e ./
