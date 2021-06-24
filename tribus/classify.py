@@ -4,7 +4,7 @@ import pandas as pd
 from minisom import MiniSom
 import os
 
-def somClustering(cells):
+def clusterCells(cells):
     '''run self-organized map to assign cells to nodes'''
     #TODO: choose clustering variables based on data length and width, number of labels in level and number of levels
     n=10
@@ -30,7 +30,7 @@ def assignLabels(scores):
 
 def processLevel(level):
     '''parallelize for samples if possible'''
-    # TODO: PARALLELIZE HERE
+    # TODO PARALLELIZE HERE
 
     #nodes = somClustering(cells)
     #scores = scoreNodes(nodes, rules)
@@ -54,6 +54,7 @@ def run(input_path,labels,output_folder):
     input_path='input_data'
     logic_path='gate_logic_1.xlsx'
     output_folder='test_results'
+
     
     df = pd.ExcelFile(logic_path)
     labels = pd.read_excel(df, df.sheet_names, index_col=0)
@@ -69,7 +70,7 @@ def run(input_path,labels,output_folder):
     sample_data=pd.read_csv(os.path.join(input_path,samplefile))
         #for level in levels:
     level = levels[0]
-    # Test if the gating needs columns that don't exist
+    # Test if the gating needs columns that don't exist: TODO only channels with non-zero values!
     if  set(sample_data.columns.values).issubset(set(labels[level].index.values)):
         # return some error
         print(labels[level].index.values)
@@ -94,14 +95,12 @@ def run(input_path,labels,output_folder):
         normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
         scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)
     
-        
-
 def run2(input_path,labels,output_folder):
     levels = list(labels.keys())
 
     # Read data
     filenames=os.listdir(input_path) 
-
+    # TODO: in settings where multiple samples were in the same slides and can be run together there should be a function to merge them
     for samplefile in filenames:
         sample_data=pd.read_csv(os.path.join(input_path,samplefile))
         for level in levels:
