@@ -19,7 +19,7 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 #
 ###
 
-import os, sys, datetime
+import os, sys, datetime, shutil
 import argparse
 from pathlib import Path
 import pkg_resources
@@ -65,8 +65,9 @@ def main(argv=None):
                 # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
                 Path(output_folder).mkdir(parents=True, exist_ok=True)
                 print(output_folder)
-                # TODO: test if other folders exist and if some level of labels was not changed (meanwhile it runs all the way regardless)
-                # store the logic file in this folder
+                # TODO: test if other folders exist in 'args.output' and if some 'level' in 'labels' was not changed (meanwhile it runs all the way regardless)
+                # store the logic file in this folder, so the user can always go back to see which logic created those results
+                shutil.copy(args.logic, output_folder + os.sep + 'gates_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.xlsx')
                 utils.runClassify(args.input, logic, output_folder)
             else:
                 print('invalid data: check logs.')

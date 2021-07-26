@@ -2,4 +2,6 @@ dist/*
 tribus.egg-info/*
 tribus/__pycache__/*
 .idea/*
-test-dev-notebook.ipynb
+*.ipynb
+*.pdf
+*.vscode
