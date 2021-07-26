@@ -8,6 +8,16 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 # Potential feature:
 # tribus generate-logic -i <input DIR>
 #
+###
+# Test the package live on anaconda prompt with:
+#   cd /tribus/
+#   python setup.py develop
+#   pip install  -e ./
+#   cd ../test data
+# tribus classify -i input_data/ -l gate_logic_1.xlsx -o test_results
+#
+#
+###
 
 import os, sys, datetime
 import argparse
