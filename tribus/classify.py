@@ -2,6 +2,8 @@
 import numpy as np
 import pandas as pd
 from minisom import MiniSom
+from sklearn_som.som import SOM
+from FlowGrid import *
 import os
 
 def clusterCells(cells):
@@ -51,14 +53,6 @@ def normalize_scores(x):
     return res
 
 def run(input_path,labels,output_folder):
-    input_path='input_data'
-    logic_path='gate_logic_1.xlsx'
-    output_folder='test_results'
-
-    
-    df = pd.ExcelFile(logic_path)
-    labels = pd.read_excel(df, df.sheet_names, index_col=0)
-
     levels = list(labels.keys())
 
     # Read data
@@ -79,6 +73,18 @@ def run(input_path,labels,output_folder):
     # Filter table to have only the correct channels
     level_logic_df = labels[level]
 
+    test_data = sample_data[labels[level].index.values].to_numpy()
+    test_som = SOM(m=5, n=5, dim=6)
+    test_som.fit(test_data)
+    predictions = test_som.predict(test_data)
+    print("som labels")
+    unique, counts = np.unique(predictions, return_counts=True)
+    print(dict(zip(unique, counts)))
+
+    # For each node calculate median expression of each gating marker
+    data_to_score = 
+
+    
     scores_matrix = np.zeros((sample_data.shape[0], labels[level].shape[1]))
     for idx, cell_type in enumerate(labels[level].columns.values):
         print(cell_type)

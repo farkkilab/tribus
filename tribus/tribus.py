@@ -55,7 +55,7 @@ def main(argv=None):
         help='Generate quality report after labeling')
 
     args = parser.parse_args(argv)
-
+    
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
             valid, logic = utils.validateInputs(args.input, args.logic)
@@ -65,7 +65,6 @@ def main(argv=None):
                 # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
                 Path(output_folder).mkdir(parents=True, exist_ok=True)
                 print(output_folder)
-                # TODO: test if other folders exist in 'args.output' and if some 'level' in 'labels' was not changed (meanwhile it runs all the way regardless)
                 # store the logic file in this folder, so the user can always go back to see which logic created those results
                 shutil.copy(args.logic, output_folder + os.sep + 'gates_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.xlsx')
                 utils.runClassify(args.input, logic, output_folder)
@@ -73,10 +72,9 @@ def main(argv=None):
                 print('invalid data: check logs.')
         else:
             print('input paths are not a directory and a file.')
-    
-    if args.command == 'preview':
+    elif args.command == 'preview':
         print('not implemented')
-    if args.command == 'report':
+    elif args.command == 'report':
         print('not implemented') # @mikrkilk
     else:
         parser.print_help()
