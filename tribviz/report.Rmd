@@ -1,0 +1,113 @@
+---
+title: "Report"
+output: pdf_document
+params:
+  oldpath: ""
+  newpath: ""
+  comparison: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(dpi=300,fig.width=7)
+source('qc_functions.R')
+
+# TODO: Cell type caller will probs use some other way of saving data in the future instead of RData
+```
+
+# Report
+
+```{r include=FALSE}
+# TODO: Check if the column names behave as expected
+# TODO: Check if there's more calls than global cell type before combining gates
+df.old = set_names(list.files(params$oldpath, pattern = ".csv", full.names = T),
+                     gsub(".csv", "", list.files(params$oldpath, pattern = ".csv")))%>% 
+            map_dfr(~iotools::read.csv.raw(., header = T,sep = " "), .id="sample")
+colnames(df.old) = gsub('\"', "", colnames(df.old))
+if(grep(GlobalCellType,tail(colnames(df.old),1))!=1)
+{
+  df.old = combine_gates(df.old)
+}
+
+
+if(params$comparison) {
+  df.new = set_names(list.files(params$newpath, pattern = ".csv", full.names = T),
+                     gsub(".csv", "", list.files(params$newpath, pattern = ".csv")))%>% 
+            map_dfr(~iotools::read.csv.raw(., header = T,sep = " "), .id="sample")
+  colnames(df.new) = gsub('\"', "", colnames(df.new))
+  if(grep(GlobalCellType,tail(colnames(df.new),1))!=1)
+  {
+    df.new = combine_gates(df.new)
+  }
+}
+```
+
+## Cell type compositions
+
+
+```{r echo=F, results='asis'}
+if(params$comparison){
+  cat("\n### Results from the new iteration \n")
+  print(all_pie_charts(df.new))
+  cat('\n')
+  cat("\n### Results from the old iteration \n")
+  print(all_pie_charts(df.old))
+  cat('\n')
+  cat("\n### Differences in cell type amounts between iterations \n")
+  comp.plots=compare_compositions(df.new,df.old)
+  print(comp.plots[[1]])
+  print(comp.plots[[2]])
+} else{
+  print(all_pie_charts(df.old))
+}
+```
+
+## Changes in cell type composition
+```{r echo=F, results='asis'}
+if(params$comparison){
+  print(plot_alluv(df.new, df.old))
+  cat("\n This plot showcases how the identity of each cell changed between the gating iterations\n")
+}
+```
+
+
+## Gating analysis
+
+```{r echo=F, results='asis'}
+if(params$comparison){
+  ind.plots = index_plots(df.new,df.old)
+} else {
+  cat("\n### NB! No comparison found, analysis ran with the same data as both iterations!!")
+  ind.plots = index_plots(df.old,df.old)
+}
+
+cat("\n### Marker index \n")
+  cat("\n The average expression of certain markers in all the samples of each iteration in different cell types\n")
+  
+  print(ind.plots[[1]])
+  cat("\n")
+  cat("\n### Gate index \n")
+  cat("\n The average expression of each cell type's positive markers minus the average of their negative markers of each iteration")
+  print(ind.plots[[2]])
+```
+
+## Marker expression
+
+### Heatmaps
+
+```{r echo=F, results='asis'}
+if(params$comparison) {
+  draw(ind.plots[[3]],column_title="Heatmap of the new iteration",heatmap_legend_side = "bottom")
+  
+}
+draw(ind.plots[[4]],column_title="Heatmap of the old iteration",heatmap_legend_side = "bottom")
+```
+
+### Umaps
+```{r echo=F, results='asis', dev = "png"}
+if(params$comparison) {
+  plot.umaps(df.new, "Supervised UMAP of the new iteration, at max 100k cells")
+}
+plot.umaps(df.old, "Supervised UMAP of the old iteration, at max 100k cells")
+```
+
