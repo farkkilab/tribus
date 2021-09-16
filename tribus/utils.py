@@ -27,10 +27,13 @@ def validateGateLogic(excel_file):
     return(logic)
 
 def validateInputs(input_folder, excel_file):
+    """Called by tribus.py"""
     return(validateInputData(input_folder), validateGateLogic(excel_file))
 
-def runClassify(path_in, logic, outputFolder):
-    result = classify.run(dataPaths,logic,outputFolder)
+def runClassify(path_in, logic, output_folder):
+    # TODO: test if other folders exist in 'args.output' and if some 'level' in 'labels' was not changed (meanwhile it runs all the way regardless)
+
+    result = classify.run(path_in,logic,output_folder)
     
     # write CSVs
     return(True)

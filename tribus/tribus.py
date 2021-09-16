@@ -5,8 +5,21 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 2. `tribus preview` launches an interactive visualization of the cell type labels across samples and helps assessing the quality of the calls with prior knowledge.
 3. `tribus report` will produce static figures and CSV files to be used as supplementary material or in downstream analyses.
 '''
+# Potential feature:
+# tribus generate-logic -i <input DIR>
+#
+###
+# Test the package live on anaconda prompt with:
+#   cd /tribus/
+#   python setup.py develop
+#   pip install  -e ./
+#   cd ../test data
+# tribus classify -i input_data/ -l gate_logic_1.xlsx -o test_results
+#
+#
+###
 
-import os, sys, datetime
+import os, sys, datetime, shutil
 import argparse
 from pathlib import Path
 import pkg_resources
@@ -42,26 +55,27 @@ def main(argv=None):
         help='Generate quality report after labeling')
 
     args = parser.parse_args(argv)
-
+    
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
             valid, logic = utils.validateInputs(args.input, args.logic)
             if valid:
                 # create output dir if not present, and create a subfolder with current time stamp
-                outputFolder = os.path.join(args.output, datetime.datetime.now().strftime('%Y%m%d_%Hh%Mm'))
-                Path(outputFolder).mkdir(parents=True, exist_ok=True)
-                print(outputFolder)
-                # store the logic file in this folder
-                utils.runClassify(args.input, logic, outputFolder)
+                output_folder = os.path.join(args.output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+                # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
+                Path(output_folder).mkdir(parents=True, exist_ok=True)
+                print(output_folder)
+                # store the logic file in this folder, so the user can always go back to see which logic created those results
+                shutil.copy(args.logic, output_folder + os.sep + 'gates_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.xlsx')
+                utils.runClassify(args.input, logic, output_folder)
             else:
                 print('invalid data: check logs.')
         else:
             print('input paths are not a directory and a file.')
-    
-    if args.command == 'preview':
+    elif args.command == 'preview':
         print('not implemented')
-    if args.command == 'report':
-        print('not implemented')
+    elif args.command == 'report':
+        print('not implemented') # @mikrkilk
     else:
         parser.print_help()
 
