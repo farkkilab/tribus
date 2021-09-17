@@ -196,11 +196,11 @@ plot.heatmap <- function(data, sds, scalem="none", title=NULL,colors=NULL, row_a
   #mat <- scale( as.matrix(data) )
   mat2 = as.matrix(data)
   return(Heatmap(mat2, column_title = "Numerical values inside cells represents the standard deviation!",
-           cluster_rows=T, border = T,name='Scale', width = ncol(mat2)*unit(8, "mm"), height = nrow(mat2)*unit(8, "mm"),
+           cluster_rows=T, border = T,name='Scale', width = ncol(mat2)*unit(7, "mm"), height = nrow(mat2)*unit(7, "mm"),
            color=colorRampPalette(c("#0e74b3","white","#cf242a"),interpolate="linear")(200), right_annotation=row_anno,
-           column_names_rot = 45,row_names_gp = gpar(fontsize = 8),heatmap_legend_param = list(direction = "horizontal"),
+           column_names_rot = 45,row_names_gp = gpar(fontsize = 8),column_names_gp = gpar(fontsize = 8),heatmap_legend_param = list(direction = "horizontal"),
            cell_fun = function(j, i, x, y, width, height, fill) {
-             grid.text(sprintf("%.1f", sds[i, j]), x, y, gp = gpar(fontsize = 10))
+             grid.text(sprintf("%.2g", sds[i, j]), x, y, rot=45, gp = gpar(fontsize = 6))
            }))
 }
 
