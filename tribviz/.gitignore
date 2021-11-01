@@ -1,12 +1,49 @@
-2b_cell_type_caller.R
-gates.R
-cell_type_calling.R
-plottings.R
-qc_funcs.R
-data/*
-.Rhistory
-.RData
-report_changes.pdf
-report.pdf
-report.md
-figure/*
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+/data# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.test_data.json
+.data_to_json.R
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

@@ -1,0 +1,97 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.canvas {
+  width: 1500px;
+  height: 1500px;
+  border: 1px solid black;
+  position: absolute;
+  
+}
+
+.frame {
+  align-items: center;
+  justify-content: center;
+  border: solid 1px grey;
+  background: #f0f0f0;
+}
+
+.plot {
+  height: inherit;
+  width: inherit;
+  position: absolute;
+  z-index: -1;
+}
+
+.emptyplot {
+  height: inherit;
+  width: inherit;
+  position: absolute;
+  z-index: -1;
+  background-color: hotpink;
+}
+
+.emptytext {
+  position: relative;
+  top: 50%;
+}
+
+.drag-handle {
+  background-color: grey;
+  padding-bottom: 2rem;
+  z-index: 10;
+  width: inherit;
+}
+
+.removerX {
+  float: right;
+  margin-right: 0.5rem;
+  cursor: pointer;
+}
+
+.openSetupCog {
+  float: left;
+  cursor: pointer;
+  width: 1rem;
+  height: 1rem;
+}
+.botApp {
+  display: flex;
+  flex-direction: row;
+}
+
+.setup {
+  width: 20rem;
+  height: 75rem;
+  border: 1px solid black;
+  z-index: 10;
+  background-color: darkslategray;
+  transition: width 1s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.closedSetup {
+  transition: width 1s ease;
+  width: 0rem;
+  
+}
+
+.preview {
+  width: 15rem;
+  height: 15rem;
+  position: relative;
+  left: 12.5%;
+  transition: width 1s ease;
+}
