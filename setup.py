@@ -20,6 +20,7 @@ requires = [
     'scikit-learn>=0.21.1',
     'pandas',
     'openpyxl',
+    'sklearn_som',
 ]
 
 VERSION = '0.0.1'

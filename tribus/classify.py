@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from minisom import MiniSom
 from sklearn_som.som import SOM
-from FlowGrid import *
+#from FlowGrid import *
 import os
 
 def clusterCells(cells):
