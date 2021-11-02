@@ -1,4 +1,5 @@
 '''help validate inputs for main'''
+import os, sys, datetime, shutil
 from . import classify
 from . import label_logic
 import numpy as np
@@ -33,9 +34,10 @@ def validateInputs(input_folder, excel_file):
 def runClassify(path_in, logic, output_folder):
     # TODO: test if other folders exist in 'args.output' and if some 'level' in 'labels' was not changed (meanwhile it runs all the way regardless)
 
-    result = classify.run(path_in,logic,output_folder)
-    
+    result_labels = classify.run(path_in,logic,output_folder)
     # write CSVs
+    with open(output_folder + os.sep + 'labels_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.csv', 'w') as f:
+        f.write("\n".join(result_labels))
     return(True)
 
 
