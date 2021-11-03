@@ -18,7 +18,6 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 #
 #
 ###
-#trial comment
 
 import os, sys, datetime, shutil
 import argparse
