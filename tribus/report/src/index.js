@@ -7,10 +7,14 @@ import { Provider } from 'react-redux'
 
 import frameReducer from './reducers/frameReducer'
 import setupReducer from './reducers/setupReducer';
+import dataReducer from './reducers/dataReducer'
+import hoverReducer from './reducers/hoverReducer';
 
 const reducer = combineReducers({
   frames: frameReducer,
-  setup: setupReducer
+  setup: setupReducer,
+  data: dataReducer,
+  hover: hoverReducer
 })
 
 const store = createStore(reducer)

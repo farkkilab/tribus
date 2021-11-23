@@ -1,8 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
-import exdata from '../data/example.js'
-import BarPlot from '../components/plots/BarPlot'
+//import exdata from '../data/example.js'
+//import BarPlot from '../components/plots/BarPlot'
+import HeatmapPlot from '../components/plots/HeatmapPlot'
+import PiePlot from '../components/plots/PiePlot'
+import ScatterPlot from '../components/plots/ScatterPlot';
 
-const examplePlot =  BarPlot({data:exdata})
+//const examplePlot =  BarPlot({data:exdata})
 
 const frameReducer = (state = [], action) => {
     switch(action.type) {
@@ -15,7 +18,22 @@ const frameReducer = (state = [], action) => {
         // eslint-disable-next-line no-redeclare
         var id = action.data.id
         var frames = state.slice()
-        console.log(frames)
+        var plot_func;
+        switch(action.data.plot_type) {
+          case "heatmapdata":
+            plot_func = HeatmapPlot
+            break
+          case "piechartdata":
+            plot_func = PiePlot
+            break
+          case "umapdata":
+            plot_func = ScatterPlot
+            break
+          default:
+            plot_func = console.log
+            break
+        }
+        console.log(action.data)
         frames.splice(frames.findIndex(f=>f.id===id),1,{
           id:id,
           layout: {
@@ -25,7 +43,7 @@ const frameReducer = (state = [], action) => {
             h:30,
           },
           plot:{
-            plot:examplePlot,
+            plot:plot_func({data:action.data.data}),
             id:id
           }
         })
@@ -63,10 +81,13 @@ export const removeFrame = (id) => {
   }
 }
 
-export const addDataToPlot = (id) => {
+export const addDataToPlot = (id,data,sample_name,plot_type) => {
   return {
     type: 'ADD_DATA',
-    data: {id}
+    data: {"id":id,
+      "data":data,
+      "plot_type":plot_type,
+      "sample_name":sample_name}
   }
 }
 

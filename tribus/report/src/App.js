@@ -5,10 +5,8 @@ import PlotCanvas from './components/PlotCanvas'
 import AddFrameButton from './components/AddFrameButton'
 import FrameSetup from './components/FrameSetup';
 
+
 const App = () => {
-  //const [frames, setFrames] = useState([
-  //   { plot: BarPlot({data:exdata}), id:"a" },
-  //   { plot: 'Drag me too', id:"b" }])
   return (
     <div className="App">
       <AddFrameButton />
