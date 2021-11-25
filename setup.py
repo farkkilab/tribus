@@ -21,6 +21,7 @@ requires = [
     'pandas',
     'openpyxl',
     'sklearn_som',
+    'minisom'
 ]
 
 VERSION = '0.0.1'
