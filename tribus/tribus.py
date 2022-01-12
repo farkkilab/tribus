@@ -45,12 +45,13 @@ def main(argv=None):
         help='Folder containing CSV files, one per sample')
     parser_classify.add_argument('-l','--logic', metavar='XLSX',
         help='Excel file containing the prior knowledge of the markers and the cell type labels')
+    parser_classify.add_argument('-d','--depth', metavar='N', type=int, default=0,
+        help='Level of cell type calls, the number indicates the Excel tab in order. 0 only runs the first tab, 1 runs the first and second, and so on.')
     parser_classify.add_argument('-o','--output', metavar='DIR',
         help='Folder to store all results of multiple runs.')
-
     parser_preview.add_argument('-i','--input', metavar='DIR',
         help='Folder containing CSV files, one per sample')
-
+    # Seems unused for now - consider removing later
     parser_report.add_argument('--resultFolder', metavar='DIR',
         help='Generate quality report after labeling')
 
@@ -66,8 +67,9 @@ def main(argv=None):
                 Path(output_folder).mkdir(parents=True, exist_ok=True)
                 print(output_folder)
                 # store the logic file in this folder, so the user can always go back to see which logic created those results
-                shutil.copy(args.logic, output_folder + os.sep + 'gates_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.xlsx')
-                utils.runClassify(args.input, logic, output_folder)
+                shutil.copy(args.logic, output_folder + os.sep + 'expectedphenotypes_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.xlsx')
+                # This call does everything
+                utils.runClassify(args.input, logic, output_folder, args.depth)
             else:
                 print('invalid data: check logs.')
         else:

@@ -52,7 +52,31 @@ def normalize_scores(x):
     res = 1 - ((x - np.min(x)) / (np.max(x) - np.min(x)))
     return res
 
-def run(input_path,labels,output_folder):
+def run(input_path,labels,output_folder, level_ids, previous_labels):
+    """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
+    Keyword arguments:
+    input_path -- path to a single CSV file
+    labels -- Pandas dataframe
+    output_folder -- May be used for intermediate plots or for probabilities/scores
+    levels -- list of consecutive integers corresponding to tabs in the logic file - For now assume it's 0
+    """
+    sample_data = pd.read_csv(input_path)
+    levels = list(labels.keys())
+    for level_id in level_ids:
+        level = levels[level_id]
+        level_logic_df = labels[level]
+        if previous_labels:
+            # TODO: subset data
+        else:
+            # Assume we start with level 0
+            # Filter out unnecessary channels
+            # Cluster
+            # Score clusters
+            # Write down scores as CSV files
+            # Create label vector AND append to previous_labels
+
+
+def run0(input_path,labels,output_folder):
     levels = list(labels.keys())
 
     # Read data
