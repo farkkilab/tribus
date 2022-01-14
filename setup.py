@@ -12,7 +12,7 @@ import setuptools
 ###
 
 requires = [
-    'numpy>=1.18.1',
+    'numpy',
     'matplotlib>=3.1.2',
     'networkx>=2.4',
     'scipy>=1.4.1',
@@ -27,7 +27,7 @@ requires = [
 VERSION = '0.0.1'
 DESCRIPTION = 'Cell type based analysis of multiplexed imaging data'
 LONG_DESCRIPTION='''
-Tribus is a lightweight package to help analysis of multiplexed imaging data, such as cyclic immunofluorescence imaging (CyCIF). Its core functionality lies on automatic cell type assignment of large datasets via hiarchical categorization based on user-given prior knowledge from the user.
+Tribus is a lightweight package to help analysis of multiplexed imaging data, such as cyclic immunofluorescence imaging (CyCIF). Its core functionality lies on automatic cell type assignment of large datasets via hiarchical categorization based on user-given prior knowledge.
 '''
 AUTHOR = 'Julia Casado, Angela Szabo, Miikka Kilkkila'
 AUTHOR_EMAIL = 'julia.casado@helsinki.fi'
@@ -56,4 +56,5 @@ setuptools.setup(
     python_requires='>=3.6',
     author=AUTHOR,
     author_email=AUTHOR_EMAIL,
+    install_requires=requires,
 )
