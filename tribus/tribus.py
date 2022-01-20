@@ -67,7 +67,7 @@ def main(argv=None):
                 Path(output_folder).mkdir(parents=True, exist_ok=True)
                 print(output_folder)
                 # store the logic file in this folder, so the user can always go back to see which logic created those results
-                shutil.copy(args.logic, output_folder + os.sep + 'expectedphenotypes_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.xlsx')
+                shutil.copy(args.logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
                 # This call does everything
                 utils.runClassify(args.input, logic, output_folder, args.depth)
             else:
@@ -77,7 +77,7 @@ def main(argv=None):
     elif args.command == 'preview':
         print('not implemented')
     elif args.command == 'report':
-        print('not implemented') # @mikrkilk
+        print('not implemented')
     else:
         parser.print_help()
 

@@ -7,18 +7,16 @@ from sklearn_som.som import SOM
 import os
 import sys
 
-def clusterCells(grid_size, marker_data, labels, level):
+def clusterCells(grid_size, sample_data, labels, level):
     '''run self-organized map to assign cells to nodes'''
+    marker_data = sample_data[labels[level].index.values].to_numpy()
     #TODO: choose clustering variables based on data length and width, number of labels in level and number of levels
     som = SOM(m=grid_size, n=grid_size, dim=marker_data.shape[1])
     som.fit(marker_data)
     predictions = som.predict(marker_data)
-    print("som labels")
     unique, counts = np.unique(predictions, return_counts=True)
-    print(dict(zip(unique, counts)))
     # For each node calculate median expression of each gating marker
-    labeled = marker_data.copy()
-    # TODO: before it was sample_data now needs appending of a numeric column or converting to pandas, or returning only the labels and appending in the main function
+    labeled = sample_data[labels[level].index.values].copy()
     labeled['label'] = predictions
     data_to_score = labeled.groupby('label').median()
     return(data_to_score, labeled)
@@ -56,10 +54,9 @@ def scoreNodes(grid_size, data_to_score, labels, level):
     level_logic_df = labels[level]
     scores_matrix = np.zeros((grid_size*grid_size, labels[level].shape[1]))
     for idx, cell_type in enumerate(labels[level].columns.values):
-        print(cell_type)
         list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
         list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
-        print(len(list_positive)) # TODO: launch error if length == 0
+        # TODO: launch error if len(list_positive) == 0
         gating_positive = data_to_score[list_positive].to_numpy()
         gating_negative = data_to_score[list_negative].to_numpy()
         #
@@ -75,15 +72,16 @@ def scoreNodes(grid_size, data_to_score, labels, level):
 def run(input_path,labels,output_folder, level_ids, previous_labels):
     """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
     Keyword arguments:
-    input_path -- path to a single CSV file
-    labels -- Pandas dataframe
-    output_folder -- May be used for intermediate plots or for probabilities/scores
-    levels -- list of consecutive integers corresponding to tabs in the logic file - For now assume it's 0
+      input_path      -- path to a single CSV file
+      labels          -- Pandas dataframe
+      output_folder   -- May be used for intermediate plots or for probabilities/scores
+      levels          -- list of consecutive integers corresponding to tabs in the logic file - For now assume it's 0
     """
     sample_data = pd.read_csv(input_path)
     levels = list(labels.keys())
     for level_id in level_ids:
         level = levels[level_id]
+        print(level)
         # Test if the gating needs columns that don't exist. TODO #12 test that only channels with non-zero values
         if  set(sample_data.columns.values).issubset(set(labels[level].index.values)):
             print("Gating columns missing in data", file=sys.stderr)
@@ -93,22 +91,20 @@ def run(input_path,labels,output_folder, level_ids, previous_labels):
             print("this feature is not yet implemented")
             return(False)
         else:
-            # Assume we start with level 0
-            # Filter out unnecessary channels
-            marker_data = sample_data[labels[level].index.values].to_numpy()
+            # Assume we start with level 0            
             # Cluster
             grid_size= 6
-            data_to_score, labeled = clusterCells(grid_size, marker_data, labels, level)
+            data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
             # Score clusters
             scores_pd = scoreNodes(grid_size, data_to_score, labels, level)
-            # TODO: Write down scores as CSV files inside level loop?
+            # TODO: Write down scores as CSV files inside level loop? Filename 
             # assign highest scored label
             scores_pd['label'] = scores_pd.idxmax(axis=1)
-            print(labeled['label'])
             # back to single cell ordered list to return only labels
             scores_pd.loc[labeled['label']].label
             return scores_pd.loc[labeled['label']].label
             # Create label vector AND append to previous_labels
+    # return full label table
     
 # EOF
         
