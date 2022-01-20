@@ -10,14 +10,15 @@ import sys
 def clusterCells(grid_size, marker_data, labels, level):
     '''run self-organized map to assign cells to nodes'''
     #TODO: choose clustering variables based on data length and width, number of labels in level and number of levels
-    som = SOM(m=grid_size, n=grid_size, dim=27)
+    som = SOM(m=grid_size, n=grid_size, dim=marker_data.shape[1])
     som.fit(marker_data)
     predictions = som.predict(marker_data)
     print("som labels")
     unique, counts = np.unique(predictions, return_counts=True)
     print(dict(zip(unique, counts)))
     # For each node calculate median expression of each gating marker
-    labeled = marker_data[labels[level].index.values].copy()
+    labeled = marker_data.copy()
+    # TODO: before it was sample_data now needs appending of a numeric column or converting to pandas, or returning only the labels and appending in the main function
     labeled['label'] = predictions
     data_to_score = labeled.groupby('label').median()
     return(data_to_score, labeled)
