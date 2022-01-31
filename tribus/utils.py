@@ -24,7 +24,7 @@ def validateInputData(input_folder):
 def validateGateLogic(excel_file):
     df = pd.ExcelFile(excel_file)
     logic = pd.read_excel(df, df.sheet_names, index_col=0)
-    # hardcoded immune matching?
+    # TODO: navigate tabs and column names to make the lineage tree
     return(logic)
 
 def validateInputs(input_folder, excel_file):

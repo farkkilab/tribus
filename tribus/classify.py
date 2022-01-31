@@ -93,12 +93,13 @@ def run(input_path,labels,output_folder, level_ids, previous_labels):
         else:
             # Assume we start with level 0            
             # Cluster
-            grid_size= 6
+            grid_size= 10
             data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
             # Score clusters
             scores_pd = scoreNodes(grid_size, data_to_score, labels, level)
             # TODO: Write down scores as CSV files inside level loop? Filename 
             # assign highest scored label
+            # TODO: Write other if highest score is too low
             scores_pd['label'] = scores_pd.idxmax(axis=1)
             # back to single cell ordered list to return only labels
             scores_pd.loc[labeled['label']].label
