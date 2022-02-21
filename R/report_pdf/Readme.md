@@ -6,16 +6,16 @@ e.g. `Rcript .\produce_report.R "C:\data\iteration1" "C:\data\iteration2"`
 If two paths are provided, the report will contain comparison plots.
 
 
-### Update of the qc_functions.R script
+### Update of the qc_functions2.R script
 
 
-Inside your script for calling cell types source the `qc_functions.R` script, make sure you installed before all packages imported in the first lines. 
+Inside your script for calling cell types source the `qc_functions2.R` script, make sure you installed before all packages imported in the first lines. 
 The most informative plot are the:
-1. channel.densities()
-2. index_plots()
-3. channel.UMAPs()
+1. `channel.densities()`
+2. `index_plots()`
+3. `channel.UMAPs()`
 
-Examples of use (this need better explanations).
+Examples of use (this need better explanations):
 
 #### channel.UMAPs() example:
 
