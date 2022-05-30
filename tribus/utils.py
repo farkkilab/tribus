@@ -1,3 +1,13 @@
+-check .yml file/packages in setup, update --> master/setup.cfg
+-add currently working code
+-work on buttons/plugin (so function just have ot be added)
+
+'''help validate inputs for main'''
+import os, sys, datetime, shutil
+from . import classify
+from . import label_logic
+import numpy as np
+import pandas as pd
 
 
 # create output folder
