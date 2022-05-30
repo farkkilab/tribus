@@ -7,7 +7,7 @@ setuptools.setup()
 #   python setup.py develop
 #   pip install  -e ./
 #   cd ../test data
-# tribus classify -i input_data/ -l user_logic.xlsx -o test_results
+# tribus classify -i input_data/ -l user_logic.xlsx -o test_results -d 0
 #
 #
 ###
