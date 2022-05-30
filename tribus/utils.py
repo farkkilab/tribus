@@ -1,9 +1,3 @@
-'''help validate inputs for main'''
-import os, sys, datetime, shutil
-from . import classify
-from . import label_logic
-import numpy as np
-import pandas as pd
 
 
 # create output folder
