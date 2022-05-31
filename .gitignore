@@ -3,6 +3,5 @@ dist/*
 tribus.egg-info/*
 tribus/__pycache__/*
 .idea/*
-*.ipynb
 *.pdf
 *.vscode
