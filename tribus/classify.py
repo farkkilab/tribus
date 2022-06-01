@@ -83,7 +83,7 @@ def run(input_path,labels,output_folder, level_ids, previous_labels):
         level = levels[level_id]
         print(level)
         # Test if the gating needs columns that don't exist. TODO #12 test that only channels with non-zero values
-        if  set(sample_data.columns.values).issubset(set(labels[level].index.values)):
+        if set(sample_data.columns.values).issubset(set(labels[level].index.values)):
             print("Gating columns missing in data", file=sys.stderr)
             return(False)
         if previous_labels:
