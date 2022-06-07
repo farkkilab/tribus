@@ -10,6 +10,8 @@
 
 ## Usage instructions
 
+We recommend feeding it data that is already log-transformed or at least not too skewed.
+
 ### tribus preview <options> <paths>
     
     Not yet in the plans, could be a future branch from report (without labels)
