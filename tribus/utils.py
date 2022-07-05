@@ -34,6 +34,8 @@ def validateInputs(input_folder, excel_file):
 def runClassify(path_in, logic, output_folder, depth):
     filenames=os.listdir(path_in)
     for samplefile in filenames:
+        if samplefile.startswith('.'):
+            continue
         print(samplefile)
         input_path = os.path.join(path_in,samplefile)
         if depth > 0:
