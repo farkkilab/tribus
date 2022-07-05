@@ -4,6 +4,7 @@ import pandas as pd
 from minisom import MiniSom
 from sklearn_som.som import SOM
 #from FlowGrid import *
+from pathlib import Path
 import os
 import sys
 
@@ -69,7 +70,7 @@ def scoreNodes(grid_size, data_to_score, labels, level):
     scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values)
     return(scores_pd)
 
-def run(input_path,labels,output_folder, level_ids, previous_labels):
+def run(samplefilename, input_path,labels,output_folder, level_ids, previous_labels):
     """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
     Keyword arguments:
       input_path      -- path to a single CSV file
@@ -97,10 +98,13 @@ def run(input_path,labels,output_folder, level_ids, previous_labels):
             data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
             # Score clusters
             scores_pd = scoreNodes(grid_size, data_to_score, labels, level)
-            # TODO: Write down scores as CSV files inside level loop? Filename 
+            # Write down scores as CSV files inside level loop?
+            scores_folder = os.path.join(output_folder, 'celltype_scores')
+            Path(scores_folder).mkdir(parents=True, exist_ok=True)
+            scores_pd.to_csv(scores_folder + os.sep + 'scores_' + samplefilename)
             # assign highest scored label
-            # TODO: Write other if highest score is too low
             scores_pd['label'] = scores_pd.idxmax(axis=1)
+            # TODO: Write "Other" if highest score is too low
             # back to single cell ordered list to return only labels
             scores_pd.loc[labeled['label']].label
             return scores_pd.loc[labeled['label']].label

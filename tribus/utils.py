@@ -53,9 +53,8 @@ def runClassify(path_in, logic, output_folder, depth):
         else:
             return(False)
         # This call launches all the logic for one sample file
-        result_labels = classify.run(input_path,logic,output_folder, levels, previous_labels)
+        result_labels = classify.run(samplefile, input_path,logic,output_folder, levels, previous_labels)
         # write CSVs inside a new labels folder, one file per sample
-        #with open(output_folder + os.sep + 'labels_' + datetime.datetime.now().strftime('%Y-%m-%d_%H-%M') + '.csv', 'w') as f:
         with open(output_folder + os.sep + 'labels_' + samplefile, 'w') as f:
             f.write("\n".join(result_labels))
     return(True)
