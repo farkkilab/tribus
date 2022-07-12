@@ -7,6 +7,9 @@ from sklearn_som.som import SOM
 from pathlib import Path
 import os
 import sys
+from sklearn.cluster import SpectralClustering
+import scanpy.external as sce
+from sklearn.cluster import AgglomerativeClustering
 
 def clusterCells(grid_size, sample_data, labels, level):
     '''run self-organized map to assign cells to nodes'''
@@ -21,6 +24,21 @@ def clusterCells(grid_size, sample_data, labels, level):
     labeled['label'] = predictions
     data_to_score = labeled.groupby('label').median()
     return(data_to_score, labeled)
+
+def clusterCellsPhenoGraph(grid_size, sample_data, labels, level):
+    '''run self-organized map to assign cells to nodes'''
+    marker_data = sample_data[labels[level].index.values].to_numpy()
+    # TODO: choose clustering variables based on data length and width, number of labels in level and number of levels
+    predicted_labels, graph, Q = sce.tl.phenograph(marker_data, primary_metric = 'correlation', k = 100, min_cluster_size=10, nn_method='brute')
+    print('modularity score:', Q)
+    unique, counts = np.unique(labels, return_counts=True)
+    # For each node calculate median expression of each gating marker
+    predictions = predicted_labels
+    labeled = sample_data[labels[level].index.values].copy()
+    labeled['label'] = predictions
+    data_to_score = labeled.groupby('label').median()
+    return (data_to_score, labeled)
+
 
 # TODO: function evaluate the weight and importance of each channel in the clustering result
 
@@ -50,10 +68,10 @@ def normalize_scores(x):
     res = 1 - ((x - np.min(x)) / (np.max(x) - np.min(x)))
     return res
 
-def scoreNodes(grid_size, data_to_score, labels, level):
+def scoreNodes(data_to_score, labels, level):
     '''scoring function'''
     level_logic_df = labels[level]
-    scores_matrix = np.zeros((grid_size*grid_size, labels[level].shape[1]))
+    scores_matrix = np.zeros((data_to_score.shape[0], labels[level].shape[1]))
     for idx, cell_type in enumerate(labels[level].columns.values):
         list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
         list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
@@ -67,7 +85,7 @@ def scoreNodes(grid_size, data_to_score, labels, level):
         marker_scores = np.column_stack((marker_scores_positive,marker_scores_negative))
         normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
         scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)
-    scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values)
+    scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values, index=data_to_score.index)
     return(scores_pd)
 
 def run(samplefilename, input_path,labels,output_folder, level_ids, previous_labels):
@@ -94,10 +112,10 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
         else:
             # Assume we start with level 0            
             # Cluster
-            grid_size= 10
-            data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
+            grid_size= 25
+            data_to_score, labeled = clusterCellsPhenoGraph(grid_size, sample_data, labels, level)
             # Score clusters
-            scores_pd = scoreNodes(grid_size, data_to_score, labels, level)
+            scores_pd = scoreNodes(data_to_score, labels, level)
             # Write down scores as CSV files inside level loop?
             scores_folder = os.path.join(output_folder, 'celltype_scores')
             Path(scores_folder).mkdir(parents=True, exist_ok=True)
@@ -106,8 +124,9 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
             scores_pd['label'] = scores_pd.idxmax(axis=1)
             # TODO: Write "Other" if highest score is too low
             # back to single cell ordered list to return only labels
-            scores_pd.loc[labeled['label']].label
-            return scores_pd.loc[labeled['label']].label
+            #res=scores_pd.loc[labeled['label']]
+            res = scores_pd.loc[labeled['label']].label
+            return res
             # Create label vector AND append to previous_labels
     # return full label table
     
