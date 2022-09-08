@@ -29,7 +29,7 @@ def clusterCellsPhenoGraph(grid_size, sample_data, labels, level):
     '''run self-organized map to assign cells to nodes'''
     marker_data = sample_data[labels[level].index.values].to_numpy()
     # TODO: choose clustering variables based on data length and width, number of labels in level and number of levels
-    predicted_labels, graph, Q = sce.tl.phenograph(marker_data, primary_metric = 'correlation', k = 100, min_cluster_size=10, nn_method='brute')
+    predicted_labels, graph, Q = sce.tl.phenograph(marker_data, primary_metric = 'correlation', k = grid_size, min_cluster_size=10, nn_method='brute')
     print('modularity score:', Q)
     unique, counts = np.unique(labels, return_counts=True)
     # For each node calculate median expression of each gating marker
@@ -76,6 +76,7 @@ def scoreNodes(data_to_score, labels, level):
         list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
         list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
         # TODO: launch error if len(list_positive) == 0
+        #raise Error
         gating_positive = data_to_score[list_positive].to_numpy()
         gating_negative = data_to_score[list_negative].to_numpy()
         #
@@ -112,16 +113,18 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
         else:
             # Assume we start with level 0            
             # Cluster
-            grid_size= 25
-            data_to_score, labeled = clusterCellsPhenoGraph(grid_size, sample_data, labels, level)
+            grid_size= 30
+            data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
             # Score clusters
             scores_pd = scoreNodes(data_to_score, labels, level)
+            # assign highest scored label
+            scores_pd['label'] = scores_pd.idxmax(axis=1)
             # Write down scores as CSV files inside level loop?
             scores_folder = os.path.join(output_folder, 'celltype_scores')
             Path(scores_folder).mkdir(parents=True, exist_ok=True)
             scores_pd.to_csv(scores_folder + os.sep + 'scores_' + samplefilename)
-            # assign highest scored label
-            scores_pd['label'] = scores_pd.idxmax(axis=1)
+            data_to_score.to_csv(scores_folder + os.sep + 'data_to_scores_' + samplefilename)
+
             # TODO: Write "Other" if highest score is too low
             # back to single cell ordered list to return only labels
             #res=scores_pd.loc[labeled['label']]
