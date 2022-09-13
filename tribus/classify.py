@@ -99,6 +99,7 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
     """
     sample_data = pd.read_csv(input_path)
     levels = list(labels.keys())
+    result_table = pd.DataFrame()
     for level_id in level_ids:
         level = levels[level_id]
         print(level)
@@ -113,7 +114,7 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
         else:
             # Assume we start with level 0            
             # Cluster
-            grid_size= 30
+            grid_size= 5
             data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
             # Score clusters
             scores_pd = scoreNodes(data_to_score, labels, level)
@@ -129,8 +130,10 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
             # back to single cell ordered list to return only labels
             #res=scores_pd.loc[labeled['label']]
             res = scores_pd.loc[labeled['label']].label
-            return res
+            result_table[level] = list(res)
+
             # Create label vector AND append to previous_labels
+    return result_table
     # return full label table
     
 # EOF

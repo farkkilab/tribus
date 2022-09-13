@@ -69,7 +69,7 @@ def main(argv=None):
                 # store the logic file in this folder, so the user can always go back to see which logic created those results
                 shutil.copy(args.logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
                 # This call does everything
-                utils.runClassify(args.input, logic, output_folder, args.depth)
+                utils.runClassify(args.input, logic, output_folder, args.depth, args.output)
             else:
                 print('invalid data: check logs.')
         else:
