@@ -4,6 +4,7 @@ from . import classify
 from . import label_logic
 import numpy as np
 import pandas as pd
+import networkx as nx
 
 
 # create output folder
@@ -21,55 +22,85 @@ def validateInputData(input_folder):
     #   return list of columns available
     return(True)
 
-def validateGateLogic(excel_file):
+def buildTree(file, graph, sheet_name, sheet_names, depth, current_depth):
+    if current_depth > depth:
+        return
+    sheet = pd.read_excel(file, sheet_name=sheet_name)
+    cell_types = sheet.columns[1:]
+    for i in cell_types:
+        if i in sheet_names:
+            graph.add_edge(sheet_name, i)
+            buildTree(file, graph, i, sheet_names, depth, current_depth+1)
+
+#create a dictionary, keys: depth of levels, values: list of level names on current depth
+def buildTree_from_file(file, depth):
+    graph = nx.DiGraph()
+    xl = pd.ExcelFile(file)
+    sheet_names = xl.sheet_names
+    graph.add_node(sheet_names[0])
+    buildTree(file, graph, sheet_names[0], sheet_names, depth, 1)
+    return graph
+
+
+def validateGateLogic(excel_file, depth):
     df = pd.ExcelFile(excel_file)
     logic = pd.read_excel(df, df.sheet_names, index_col=0)
+    tree = buildTree_from_file(excel_file, depth)
     # TODO: navigate tabs and column names to make the lineage tree
-    return(logic)
+    return logic, tree
 
-def validateInputs(input_folder, excel_file):
+def validateInputs(input_folder, excel_file, depth):
     """Called by tribus.py"""
-    return(validateInputData(input_folder), validateGateLogic(excel_file))
+    logic, tree = validateGateLogic(excel_file, depth)
+    return(validateInputData(input_folder), logic, tree)
 
-def reEntry(output_folder, logic, depth, sample_name):
+def traverse0(graph, node, similiarity, old_logic, logic):
+    if old_logic[node].equals(logic[node]):
+        # TODO save the data
+        similiarity[0] += 1
+        out_edges = graph.out_edges(node)
+        for i, j in out_edges:
+            traverse0(graph, j, similiarity, old_logic, logic)
+
+def traverse(graph, node, old_logic, logic, previous_labels, reUssableLabels):
+    if old_logic[node].equals(logic[node]):
+        # TODO save the data
+        reUssableLabels[node] = previous_labels[node]
+        out_edges = graph.out_edges(node)
+        for i, j in out_edges:
+            traverse(graph, j, old_logic, logic, previous_labels, reUssableLabels)
+
+def reEntry(output, logic, depth, sample_name, tree, output_folder):
     folders = []
     reUssableLabels = pd.DataFrame()
     similarities = []
-    for path in os.listdir(output_folder):
-        if not os.path.isfile(os.path.join(output_folder, path)):
-            folders.append(path)
+    for path in os.listdir(output):
+        print(path)
+        if not os.path.isfile(os.path.join(output, path)) and path != output_folder.split("/")[-1]:
+            folders.append(path) #TODO skip current folder
 
     if len(folders) == 0:
         print('len(folders)==0')
         return None
     else:
         folders = sorted(folders, reverse = True)
+        levels = list(logic.keys())
         for folder in folders:
-            df = pd.ExcelFile(f'{output_folder}/{folder}/expected_phenotypes.xlsx')
+            df = pd.ExcelFile(f'{output}/{folder}/expected_phenotypes.xlsx')
             old_logic = pd.read_excel(df, df.sheet_names, index_col=0)
-            levels = list(logic.keys())
-            current_similarity = 0
-            for i in range(depth):
-                if not levels[i] in old_logic.keys():
-                   return None #TODO return with the current state of labels
-                else:
-                    if old_logic[levels[i]] == logic[levels[i]]:
-                        current_similarity = i
+            current_similarity = [0]
+            traverse0(tree, 'Global', current_similarity, old_logic, logic)
+            similarities.append(current_similarity[0])
 
-            similarities.append(current_similarity)
 
         best_match = folders[np.argmax(similarities)]
-        previous_labels = pd.read_csv(f'{output_folder}/{best_match}/labels_{sample_name}')
-        for i in range(depth):
-            if not levels[i] in old_logic.keys():
-                return None  # TODO return with the current state of labels
-            else:
-                if old_logic[levels[i]] == logic[levels[i]]:
-                    reUssableLabels[levels[i]] = previous_labels[levels[i]]
+        previous_labels = pd.read_csv(f'{output}/{best_match}/labels_{sample_name}')
 
+        traverse(tree, 'Global', old_logic, logic, previous_labels, reUssableLabels)
+        print(reUssableLabels)
         return reUssableLabels
 
-def runClassify(path_in, logic, output_folder, depth, output):
+def runClassify(path_in, logic, output_folder, depth, output, tree):
     filenames=os.listdir(path_in)
     for samplefile in filenames:
         if samplefile.startswith('.'):
@@ -84,7 +115,7 @@ def runClassify(path_in, logic, output_folder, depth, output):
             #TODO: if previous labels exist find path for this command previous_labels = pd.read_csv(path_to_previous_result_file)
             # if we want to redo all the calls for all the levels from 0 to depth then keep it as None
             levels = range(0, depth)
-            previous_labels = reEntry(output, logic, depth)
+            previous_labels = reEntry(output, logic, depth, samplefile, tree, output_folder)
         elif depth == 0:
             # Runs only global cell types
             levels = [0]
