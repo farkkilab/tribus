@@ -54,33 +54,32 @@ def validateInputs(input_folder, excel_file, depth):
     logic, tree = validateGateLogic(excel_file, depth)
     return(validateInputData(input_folder), logic, tree)
 
-def traverse(graph, node, old_logic, logic, previous_labels, reUssableLabels):
-    if old_logic[node].equals(logic[node]) and node in previous_labels.columns:
-        # TODO save the data
+def traverse(graph, node, old_logic, logic, previous_labels, reUssableLabels, old_levels):
+    if node in old_levels and old_logic[node].equals(logic[node]) and node in previous_labels.columns:
         reUssableLabels[node] = previous_labels[node]
         out_edges = graph.out_edges(node)
         for i, j in out_edges:
-            traverse(graph, j, old_logic, logic, previous_labels, reUssableLabels)
+            traverse(graph, j, old_logic, logic, previous_labels, reUssableLabels, old_levels)
 
 def reEntry(output, logic, depth, sample_name, tree, output_folder):
     folders = []
     reUssableLabels = pd.DataFrame()
     for path in os.listdir(output):
         if not os.path.isfile(os.path.join(output, path)) and path != output_folder.split("/")[-1]:
-            folders.append(path) #TODO skip current folder
+            folders.append(path)
 
     if len(folders) == 0:
         print('len(folders)==0')
         return None
     else:
         folders = sorted(folders, reverse = True)
-        levels = list(logic.keys())
         folder = folders[0]
-        df = pd.ExcelFile(f'{output}/{folder}/expected_phenotypes.xlsx')
         previous_labels = pd.read_csv(f'{output}/{folder}/labels_{sample_name}')
+        df = pd.ExcelFile(f'{output}/{folder}/expected_phenotypes.xlsx')
+        old_levels = df.sheet_names
         old_logic = pd.read_excel(df, df.sheet_names, index_col=0)
 
-        traverse(tree, 'Global', old_logic, logic, previous_labels, reUssableLabels)
+        traverse(tree, 'Global', old_logic, logic, previous_labels, reUssableLabels, old_levels)
         print(reUssableLabels)
         return reUssableLabels
 
