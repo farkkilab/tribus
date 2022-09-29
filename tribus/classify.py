@@ -107,7 +107,7 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
         if set(sample_data.columns.values).issubset(set(labels[level].index.values)):
             print("Gating columns missing in data", file=sys.stderr)
             return(False)
-        if previous_labels:
+        if previous_labels is not None:
             # TODO: subset data
             print("this feature is not yet implemented")
             return(False)
