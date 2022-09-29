@@ -32,7 +32,7 @@ def buildTree(file, graph, sheet_name, sheet_names, depth, current_depth):
             graph.add_edge(sheet_name, i)
             buildTree(file, graph, i, sheet_names, depth, current_depth+1)
 
-#create a dictionary, keys: depth of levels, values: list of level names on current depth
+#create a the lineage tree from levels
 def buildTree_from_file(file, depth):
     graph = nx.DiGraph()
     xl = pd.ExcelFile(file)
@@ -54,16 +54,8 @@ def validateInputs(input_folder, excel_file, depth):
     logic, tree = validateGateLogic(excel_file, depth)
     return(validateInputData(input_folder), logic, tree)
 
-def traverse0(graph, node, similiarity, old_logic, logic):
-    if old_logic[node].equals(logic[node]):
-        # TODO save the data
-        similiarity[0] += 1
-        out_edges = graph.out_edges(node)
-        for i, j in out_edges:
-            traverse0(graph, j, similiarity, old_logic, logic)
-
 def traverse(graph, node, old_logic, logic, previous_labels, reUssableLabels):
-    if old_logic[node].equals(logic[node]):
+    if old_logic[node].equals(logic[node]) and node in previous_labels.columns:
         # TODO save the data
         reUssableLabels[node] = previous_labels[node]
         out_edges = graph.out_edges(node)
@@ -73,9 +65,7 @@ def traverse(graph, node, old_logic, logic, previous_labels, reUssableLabels):
 def reEntry(output, logic, depth, sample_name, tree, output_folder):
     folders = []
     reUssableLabels = pd.DataFrame()
-    similarities = []
     for path in os.listdir(output):
-        print(path)
         if not os.path.isfile(os.path.join(output, path)) and path != output_folder.split("/")[-1]:
             folders.append(path) #TODO skip current folder
 
@@ -85,16 +75,10 @@ def reEntry(output, logic, depth, sample_name, tree, output_folder):
     else:
         folders = sorted(folders, reverse = True)
         levels = list(logic.keys())
-        for folder in folders:
-            df = pd.ExcelFile(f'{output}/{folder}/expected_phenotypes.xlsx')
-            old_logic = pd.read_excel(df, df.sheet_names, index_col=0)
-            current_similarity = [0]
-            traverse0(tree, 'Global', current_similarity, old_logic, logic)
-            similarities.append(current_similarity[0])
-
-
-        best_match = folders[np.argmax(similarities)]
-        previous_labels = pd.read_csv(f'{output}/{best_match}/labels_{sample_name}')
+        folder = folders[0]
+        df = pd.ExcelFile(f'{output}/{folder}/expected_phenotypes.xlsx')
+        previous_labels = pd.read_csv(f'{output}/{folder}/labels_{sample_name}')
+        old_logic = pd.read_excel(df, df.sheet_names, index_col=0)
 
         traverse(tree, 'Global', old_logic, logic, previous_labels, reUssableLabels)
         print(reUssableLabels)
