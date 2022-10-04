@@ -89,7 +89,52 @@ def scoreNodes(data_to_score, labels, level):
     scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values, index=data_to_score.index)
     return(scores_pd)
 
-def run(samplefilename, input_path,labels,output_folder, level_ids, previous_labels):
+def subset(sample_data, current_level, previous_level, previous_labels):
+    if previous_labels.empty:
+        return sample_data
+    labels_tumor = previous_labels.loc[previous_labels[previous_level] == current_level]
+    indeces = list(labels_tumor.index)
+    new_data = sample_data.loc[indeces, :]
+    return new_data
+
+def clustering(grid_size, sample_data, labels, level):
+    data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
+    scores_pd = scoreNodes(data_to_score, labels, level)
+
+    # assign highest scored label
+    scores_pd['label'] = scores_pd.idxmax(axis=1)
+
+    #print("scores_pd", scores_pd)
+    #print("labeled", labeled)
+
+    # TODO: Write "Other" if highest score is too low
+    # back to single cell ordered list to return only labels
+    # res=scores_pd.loc[labeled['label']]
+    res = scores_pd.loc[labeled['label']].label
+    res = pd.DataFrame(res)
+    print(res)
+    res = res.set_index(labeled.index)
+    #res = res.rename(columns={'label': level})
+    res = res.rename(columns={'label': "new_level"})
+    return res
+
+def traverse(tree, depth, grid_size, sample_data, labels, max_depth, node, previous_level, result_table, previous_labels):
+    print(node)
+    if depth > max_depth:
+        return result_table
+    if node in previous_labels.columns:
+        result = previous_labels[node]
+    else:
+        data_subset = subset(sample_data, node, previous_level, result_table)
+        result = clustering(grid_size, data_subset, labels, node)
+
+    result_table = result_table.join(result)
+    out_edges = tree.out_edges(node)
+    for i, j in out_edges:
+        traverse(tree, depth+1, grid_size, sample_data, labels, max_depth, j, i, result_table, previous_labels)
+    return result_table
+
+def run(samplefilename, input_path,labels,output_folder, level_ids, previous_labels, tree):
     """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
     Keyword arguments:
       input_path      -- path to a single CSV file
@@ -100,6 +145,7 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
     sample_data = pd.read_csv(input_path)
     levels = list(labels.keys())
     result_table = pd.DataFrame()
+    print(level_ids)
     for level_id in level_ids:
         level = levels[level_id]
         print(level)
@@ -107,15 +153,17 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
         if set(sample_data.columns.values).issubset(set(labels[level].index.values)):
             print("Gating columns missing in data", file=sys.stderr)
             return(False)
-        if previous_labels is not None:
+        #if previous_labels is not None:
             # TODO: subset data
-            print("this feature is not yet implemented")
-            return(False)
+        #    print("this feature is not yet implemented")
+        #    return(False)
         else:
             # Assume we start with level 0            
             # Cluster
             grid_size= 5
             data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
+            #print("data_to_score", data_to_score)
+            #print("labeled", labeled)
             # Score clusters
             scores_pd = scoreNodes(data_to_score, labels, level)
             # assign highest scored label
@@ -131,7 +179,11 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
             #res=scores_pd.loc[labeled['label']]
             res = scores_pd.loc[labeled['label']].label
             result_table[level] = list(res)
-
+            new_data = subset(sample_data, labels, level, result_table)
+            new_table = pd.DataFrame()
+            new_res = clustering(grid_size, new_data, labels, level, new_table)
+            result_table = result_table.join(new_res)
+            return result_table
             # Create label vector AND append to previous_labels
     return result_table
     # return full label table
