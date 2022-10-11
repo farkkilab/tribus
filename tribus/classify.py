@@ -73,19 +73,21 @@ def scoreNodes(data_to_score, labels, level):
     level_logic_df = labels[level]
     scores_matrix = np.zeros((data_to_score.shape[0], labels[level].shape[1]))
     for idx, cell_type in enumerate(labels[level].columns.values):
-        list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
-        list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
-        # TODO: launch error if len(list_positive) == 0
-        #raise Error
-        gating_positive = data_to_score[list_positive].to_numpy()
-        gating_negative = data_to_score[list_negative].to_numpy()
-        #
-        marker_scores_positive = np.apply_along_axis(score_marker_pos, 0, gating_positive)
-        marker_scores_negative = np.apply_along_axis(score_marker_neg, 0, gating_negative)
-        #
-        marker_scores = np.column_stack((marker_scores_positive,marker_scores_negative))
-        normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
-        scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)
+        if cell_type != "Apoptotic" and cell_type != "Proliferative stroma":
+            print(cell_type)
+            list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
+            list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
+            # TODO: launch error if len(list_positive) == 0
+            #raise Error
+            gating_positive = data_to_score[list_positive].to_numpy()
+            gating_negative = data_to_score[list_negative].to_numpy()
+            #
+            marker_scores_positive = np.apply_along_axis(score_marker_pos, 0, gating_positive)
+            marker_scores_negative = np.apply_along_axis(score_marker_neg, 0, gating_negative)
+            #
+            marker_scores = np.column_stack((marker_scores_positive,marker_scores_negative))
+            normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
+            scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)
     scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values, index=data_to_score.index)
     return(scores_pd)
 
@@ -99,6 +101,7 @@ def subset(sample_data, current_level, previous_level, previous_labels):
 
 def clustering(grid_size, sample_data, labels, level):
     data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
+    print(level)
     scores_pd = scoreNodes(data_to_score, labels, level)
 
     # assign highest scored label
@@ -112,26 +115,31 @@ def clustering(grid_size, sample_data, labels, level):
     # res=scores_pd.loc[labeled['label']]
     res = scores_pd.loc[labeled['label']].label
     res = pd.DataFrame(res)
-    print(res)
     res = res.set_index(labeled.index)
     #res = res.rename(columns={'label': level})
-    res = res.rename(columns={'label': "new_level"})
+    res = res.rename(columns={'label': level})
     return res
 
 def traverse(tree, depth, grid_size, sample_data, labels, max_depth, node, previous_level, result_table, previous_labels):
-    print(node)
-    if depth > max_depth:
-        return result_table
-    if node in previous_labels.columns:
-        result = previous_labels[node]
-    else:
-        data_subset = subset(sample_data, node, previous_level, result_table)
-        result = clustering(grid_size, data_subset, labels, node)
+    if depth < max_depth:
+        if node in previous_labels.columns:
+            print(f'{node} in previous lables')
+            result = previous_labels[node]
+            result = pd.DataFrame(result, columns=[node])
+        else:
+            data_subset = subset(sample_data, node, previous_level, result_table)
+            print(f'{node}, subsetting done')
+            result = clustering(grid_size, data_subset, labels, node)
+            print(f'{node}, clustering done')
 
-    result_table = result_table.join(result)
-    out_edges = tree.out_edges(node)
-    for i, j in out_edges:
-        traverse(tree, depth+1, grid_size, sample_data, labels, max_depth, j, i, result_table, previous_labels)
+        if result_table.empty:
+            result_table = result
+        else:
+            result_table = result_table.join(result)
+        print(result_table)
+        out_edges = tree.out_edges(node)
+        for i, j in out_edges:
+            result_table = traverse(tree, depth+1, grid_size, sample_data, labels, max_depth, j, i, result_table, previous_labels)
     return result_table
 
 def run(samplefilename, input_path,labels,output_folder, level_ids, previous_labels, tree):
@@ -142,9 +150,13 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
       output_folder   -- May be used for intermediate plots or for probabilities/scores
       levels          -- list of consecutive integers corresponding to tabs in the logic file - For now assume it's 0
     """
-    sample_data = pd.read_csv(input_path)
+    sample_data = pd.read_csv(input_path, index_col = 0)
     levels = list(labels.keys())
     result_table = pd.DataFrame()
+    result_table = traverse(tree, 0, 5, sample_data, labels, level_ids, "Global", pd.DataFrame(), result_table, previous_labels)
+    print(result_table)
+    return result_table
+
     print(level_ids)
     for level_id in level_ids:
         level = levels[level_id]

@@ -106,7 +106,7 @@ def runClassify(path_in, logic, output_folder, depth, output, tree):
         else:
             return(False)
         # This call launches all the logic for one sample file
-        result_labels = classify.run(samplefile, input_path,logic,output_folder, levels, previous_labels, tree)
+        result_labels = classify.run(samplefile, input_path, logic, output_folder, depth, previous_labels, tree)
         # write CSVs inside a new labels folder, one file per sample
         result_labels.to_csv(f'{output_folder}{os.sep}labels_{samplefile}')
         #with open(output_folder + os.sep + 'labels_' + samplefile, 'w') as f:
