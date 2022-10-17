@@ -73,21 +73,23 @@ def scoreNodes(data_to_score, labels, level):
     level_logic_df = labels[level]
     scores_matrix = np.zeros((data_to_score.shape[0], labels[level].shape[1]))
     for idx, cell_type in enumerate(labels[level].columns.values):
-        if cell_type != "Apoptotic" and cell_type != "Proliferative stroma":
-            print(cell_type)
-            list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
-            list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
-            # TODO: launch error if len(list_positive) == 0
-            #raise Error
-            gating_positive = data_to_score[list_positive].to_numpy()
+        print(cell_type)
+        list_negative = list(level_logic_df.loc[level_logic_df[cell_type] == -1].index)
+        list_positive = list(level_logic_df.loc[level_logic_df[cell_type] == 1].index)
+        # TODO: launch error if len(list_positive) == 0
+
+        gating_positive = data_to_score[list_positive].to_numpy()
+        marker_scores_positive = np.apply_along_axis(score_marker_pos, 0, gating_positive)
+
+        if len(list_negative) != 0:
             gating_negative = data_to_score[list_negative].to_numpy()
-            #
-            marker_scores_positive = np.apply_along_axis(score_marker_pos, 0, gating_positive)
             marker_scores_negative = np.apply_along_axis(score_marker_neg, 0, gating_negative)
-            #
-            marker_scores = np.column_stack((marker_scores_positive,marker_scores_negative))
-            normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
-            scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)
+            marker_scores = np.column_stack((marker_scores_positive, marker_scores_negative))
+        else:
+            marker_scores = marker_scores_positive
+
+        normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
+        scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)
     scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values, index=data_to_score.index)
     return(scores_pd)
 
@@ -99,7 +101,7 @@ def subset(sample_data, current_level, previous_level, previous_labels):
     new_data = sample_data.loc[indeces, :]
     return new_data
 
-def clustering(grid_size, sample_data, labels, level):
+def clustering(grid_size, sample_data, labels, level, scores_folder, samplefilename):
     data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
     print(level)
     scores_pd = scoreNodes(data_to_score, labels, level)
@@ -107,21 +109,21 @@ def clustering(grid_size, sample_data, labels, level):
     # assign highest scored label
     scores_pd['label'] = scores_pd.idxmax(axis=1)
 
-    #print("scores_pd", scores_pd)
-    #print("labeled", labeled)
+
+    scores_pd.to_csv(scores_folder + os.sep + 'scores_'  + level + '_' + samplefilename )
+    data_to_score.to_csv(scores_folder + os.sep + 'data_to_scores_'  + level + '_' + samplefilename)
 
     # TODO: Write "Other" if highest score is too low
-    # back to single cell ordered list to return only labels
-    # res=scores_pd.loc[labeled['label']]
+
     res = scores_pd.loc[labeled['label']].label
     res = pd.DataFrame(res)
     res = res.set_index(labeled.index)
-    #res = res.rename(columns={'label': level})
     res = res.rename(columns={'label': level})
     return res
 
-def traverse(tree, depth, grid_size, sample_data, labels, max_depth, node, previous_level, result_table, previous_labels):
+def traverse(tree, depth, grid_size, sample_data, labels, max_depth, node, previous_level, result_table, previous_labels, scores_folder, samplefilename):
     if depth < max_depth:
+        # check whether there is previously available data, so not necessary to rerun some parts of tribus
         if node in previous_labels.columns:
             print(f'{node} in previous lables')
             result = previous_labels[node]
@@ -129,20 +131,30 @@ def traverse(tree, depth, grid_size, sample_data, labels, max_depth, node, previ
         else:
             data_subset = subset(sample_data, node, previous_level, result_table)
             print(f'{node}, subsetting done')
-            result = clustering(grid_size, data_subset, labels, node)
+
+            #checking whether all the requested marker is in tha data
+            if set(sample_data.columns.values).issubset(set(labels[node].index.values)):
+                print("Gating columns missing in data", file=sys.stderr)
+                return False
+
+            #only using the markers which are containing different values than zeros
+            filtered_markers = list(labels[node].loc[(labels[node] != 0).any(axis=1)].index)
+            labels[node] = labels[node].loc[filtered_markers]
+
+            result = clustering(grid_size, data_subset, labels, node, scores_folder, samplefilename)
             print(f'{node}, clustering done')
 
         if result_table.empty:
             result_table = result
         else:
             result_table = result_table.join(result)
-        print(result_table)
+
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
-            result_table = traverse(tree, depth+1, grid_size, sample_data, labels, max_depth, j, i, result_table, previous_labels)
+            result_table = traverse(tree, depth+1, grid_size, sample_data, labels, max_depth, j, i, result_table, previous_labels, scores_folder, samplefilename)
     return result_table
 
-def run(samplefilename, input_path,labels,output_folder, level_ids, previous_labels, tree):
+def run(samplefilename, input_path, labels, output_folder, level_ids, previous_labels, tree):
     """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
     Keyword arguments:
       input_path      -- path to a single CSV file
@@ -150,53 +162,16 @@ def run(samplefilename, input_path,labels,output_folder, level_ids, previous_lab
       output_folder   -- May be used for intermediate plots or for probabilities/scores
       levels          -- list of consecutive integers corresponding to tabs in the logic file - For now assume it's 0
     """
+    #create an output folder for intermediate results
+    scores_folder = os.path.join(output_folder, 'celltype_scores')
+    Path(scores_folder).mkdir(parents=True, exist_ok=True)
+
     sample_data = pd.read_csv(input_path, index_col = 0)
-    levels = list(labels.keys())
+
+
     result_table = pd.DataFrame()
-    result_table = traverse(tree, 0, 5, sample_data, labels, level_ids, "Global", pd.DataFrame(), result_table, previous_labels)
-    print(result_table)
-    return result_table
-
-    print(level_ids)
-    for level_id in level_ids:
-        level = levels[level_id]
-        print(level)
-        # Test if the gating needs columns that don't exist. TODO #12 test that only channels with non-zero values
-        if set(sample_data.columns.values).issubset(set(labels[level].index.values)):
-            print("Gating columns missing in data", file=sys.stderr)
-            return(False)
-        #if previous_labels is not None:
-            # TODO: subset data
-        #    print("this feature is not yet implemented")
-        #    return(False)
-        else:
-            # Assume we start with level 0            
-            # Cluster
-            grid_size= 5
-            data_to_score, labeled = clusterCells(grid_size, sample_data, labels, level)
-            #print("data_to_score", data_to_score)
-            #print("labeled", labeled)
-            # Score clusters
-            scores_pd = scoreNodes(data_to_score, labels, level)
-            # assign highest scored label
-            scores_pd['label'] = scores_pd.idxmax(axis=1)
-            # Write down scores as CSV files inside level loop?
-            scores_folder = os.path.join(output_folder, 'celltype_scores')
-            Path(scores_folder).mkdir(parents=True, exist_ok=True)
-            scores_pd.to_csv(scores_folder + os.sep + 'scores_' + samplefilename)
-            data_to_score.to_csv(scores_folder + os.sep + 'data_to_scores_' + samplefilename)
-
-            # TODO: Write "Other" if highest score is too low
-            # back to single cell ordered list to return only labels
-            #res=scores_pd.loc[labeled['label']]
-            res = scores_pd.loc[labeled['label']].label
-            result_table[level] = list(res)
-            new_data = subset(sample_data, labels, level, result_table)
-            new_table = pd.DataFrame()
-            new_res = clustering(grid_size, new_data, labels, level, new_table)
-            result_table = result_table.join(new_res)
-            return result_table
-            # Create label vector AND append to previous_labels
+    result_table = traverse(tree, 0, 5, sample_data, labels, level_ids, "Global", pd.DataFrame(), result_table, previous_labels, scores_folder, samplefilename)
+    #print(result_table)
     return result_table
     # return full label table
     
