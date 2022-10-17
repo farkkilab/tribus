@@ -46,7 +46,6 @@ def validateGateLogic(excel_file, depth):
     df = pd.ExcelFile(excel_file)
     logic = pd.read_excel(df, df.sheet_names, index_col=0)
     tree = buildTree_from_file(excel_file, depth)
-    # TODO: navigate tabs and column names to make the lineage tree
     return logic, tree
 
 def validateInputs(input_folder, excel_file, depth):
@@ -91,13 +90,6 @@ def runClassify(path_in, logic, output_folder, depth, output, tree):
         print(samplefile)
         input_path = os.path.join(path_in,samplefile)
         if depth > 0:
-
-            # TODO: test if other folders exist in 'args.output'
-            #       if the logic.xlsx file remains unchanged for consecutive levels (tabs) load the results
-            #
-            #TODO: if previous labels exist find path for this command previous_labels = pd.read_csv(path_to_previous_result_file)
-            # if we want to redo all the calls for all the levels from 0 to depth then keep it as None
-            levels = range(0, depth)
             previous_labels = reEntry(output, logic, depth, samplefile, tree, output_folder)
         elif depth == 0:
             # Runs only global cell types
