@@ -7,9 +7,12 @@ from sklearn_som.som import SOM
 from pathlib import Path
 import os
 import sys
-from sklearn.cluster import SpectralClustering
-import scanpy.external as sce
-from sklearn.cluster import AgglomerativeClustering
+
+## Constants
+MAX_PERCENTILE = 99
+#REQUIRED_CELLS_FOR_CLUSTERING = 100
+REQUIRED_CELLS_FOR_CLUSTERING = 100000
+DEFAULT_GRID_SIZE = 10
 
 
 def cluster_cells(sample_data, labels, level):
@@ -59,7 +62,7 @@ def score_marker_pos(x):
     get the largest value for a marker, subtract from it all the values --> take the squared
     large values will get small values, small values get larger values
     """
-    res = [(np.percentile(x, 99) - i) ** 2 for i in x]
+    res = [(np.percentile(x, MAX_PERCENTILE) - i) ** 2 for i in x]
     return res
 
 
@@ -106,8 +109,8 @@ def score_nodes(data_to_score, labels, level):
             marker_scores = marker_scores_positive
 
         normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
-        scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1)  # put the mean of the marker values of a celltype into a matrix (indexed by the celltypes)
-    scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values, index=data_to_score.index)
+        scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1) # put the mean of the marker values of a celltype into a matrix (indexed by the celltypes)
+    scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values) # index=data_to_score.index
     return scores_pd
 
 
@@ -121,22 +124,33 @@ def subset(sample_data, current_level, previous_level, previous_labels):
 
 
 def clustering(sample_data, labels, level, scores_folder, samplefilename):
-    data_to_score, labeled = cluster_cells(sample_data, labels, level)
     print(level)
 
-    #get a table, rows are the clusters and columns are the cell-types, having the scoring, highest the more probable
-    scores_pd = score_nodes(data_to_score, labels, level)
-    scores_pd['label'] = scores_pd.idxmax(axis=1)
+    if len(sample_data) < REQUIRED_CELLS_FOR_CLUSTERING:
+        # This will score each cell without need for clustering, the constant should be changed after testing for single cell clustering
+        data_to_score = sample_data
+        scores_pd = score_nodes(data_to_score, labels, level)
+        scores_pd['label'] = scores_pd.idxmax(axis=1)
+        labels_list = scores_pd.label
+        labels_df = pd.DataFrame(labels_list)
+        labels_df = labels_df.set_index(sample_data.index)
+
+    else: # if enough cells, do clustering
+        # get a table, rows are the clusters and columns are the cell-types, having the scoring, highest the more probable
+        data_to_score, labeled = cluster_cells(sample_data, labels, level)
+        scores_pd = score_nodes(data_to_score, labels, level)
+        # assign highest scored label
+        scores_pd['label'] = scores_pd.idxmax(axis=1)
+        labels_list = scores_pd.loc[labeled['label']].label # according to the cluster labels, assign the most probable cell-type to each cell
+        labels_df = pd.DataFrame(labels_list)
+        labels_df = labels_df.set_index(labeled.index)
+
     scores_pd.to_csv(scores_folder + os.sep + 'scores_' + level + '_' + samplefilename)
-    data_to_score.to_csv(scores_folder + os.sep + 'data_to_scores_' + level + '_' + samplefilename)
+    data_to_score.to_csv(scores_folder + os.sep + 'data_to_score_' + level + '_' + samplefilename)
 
-    # TODO: Write "Other" if highest score is too low, probably threshold for 0.5
-
-    res = scores_pd.loc[labeled['label']].label #according to the cluster labels, assign the most probable cell-type to each cell
-    res = pd.DataFrame(res)
-    res = res.set_index(labeled.index)
-    res = res.rename(columns={'label': level})
-    return res
+    # TODO: Write "Other" if highest score is too low
+    labels_df = labels_df.rename(columns={'label': level})
+    return labels_df
 
 
 def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, previous_labels,
