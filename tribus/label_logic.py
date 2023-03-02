@@ -1,6 +1,3 @@
-# @raviola-byte
-# consider making it a class or set of classes
-
 import numpy as np
 import pandas as pd
 

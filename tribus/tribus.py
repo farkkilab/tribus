@@ -25,6 +25,7 @@ from pathlib import Path
 import pkg_resources
 from . import utils
 
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog='tribus', description='Execute tribus options on single cell data tables')
     subparsers = parser.add_subparsers(title='tribus subcommands',help='Additional sub-command help with -h',dest='command')
@@ -59,8 +60,14 @@ def main(argv=None):
     
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
-            valid, logic, tree = utils.validateInputs(args.input, args.logic, args.depth)
-            if valid:
+
+            valid_depth = True
+            if args.depth < 0:
+                valid_depth = args.depth >= 0
+                print("Depth should be positive or zero")
+
+            valid, input_files, logic, tree = utils.validate_inputs(args.input, args.logic, args.depth)
+            if valid and valid_depth:
                 # create output dir if not present, and create a subfolder with current time stamp
                 output_folder = os.path.join(args.output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
                 # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
@@ -69,7 +76,7 @@ def main(argv=None):
                 # store the logic file in this folder, so the user can always go back to see which logic created those results
                 shutil.copy(args.logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
                 # This call does everything
-                utils.runClassify(args.input, logic, output_folder, args.depth, args.output, tree)
+                utils.run_classify(input_files, logic, output_folder, args.depth, args.output, tree)
             else:
                 print('invalid data: check logs.')
         else:
