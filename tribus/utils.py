@@ -115,7 +115,7 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
 
     if len(folders) == 0:
         print('len(folders)==0')
-        return None
+        return reusable_labels
     else:
         folders = sorted(folders, reverse=True)
         folder = folders[0]
@@ -130,10 +130,10 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
 
 def run_classify(input_files, logic, output_folder, depth, output, tree):
     for file in input_files:
-        if depth > 0:
+        if depth < 0:
             previous_labels = re_entry(output, logic, depth, file, tree, output_folder)
         else:
-            previous_labels = None
+            previous_labels = pd.DataFrame()
 
         result_labels = classify.run(input_files[file], file, logic, output_folder, depth, previous_labels, tree)
 

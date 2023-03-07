@@ -1,18 +1,14 @@
 ''' Start point of the command tribus classify '''
 import numpy as np
 import pandas as pd
-from minisom import MiniSom
 from sklearn_som.som import SOM
-# from FlowGrid import *
 from pathlib import Path
 import os
-import sys
 
 ## Constants
 MAX_PERCENTILE = 99
 #REQUIRED_CELLS_FOR_CLUSTERING = 100
-REQUIRED_CELLS_FOR_CLUSTERING = 100000
-DEFAULT_GRID_SIZE = 10
+REQUIRED_CELLS_FOR_CLUSTERING = 1_000
 
 
 def cluster_cells(sample_data, labels, level):
@@ -32,7 +28,7 @@ def cluster_cells(sample_data, labels, level):
     data_to_score = labeled.groupby('label').median()  # for all cells the median marker level of each cluster
     return data_to_score, labeled
 
-
+"""
 def clusterCellsPhenoGraph(grid_size, sample_data, labels, level):
     '''run self-organized map to assign cells to nodes'''
     marker_data = sample_data[labels[level].index.values].to_numpy()
@@ -47,7 +43,7 @@ def clusterCellsPhenoGraph(grid_size, sample_data, labels, level):
     labeled['label'] = predictions
     data_to_score = labeled.groupby('label').median()
     return (data_to_score, labeled)
-
+"""
 
 # TODO: function evaluate the weight and importance of each channel in the clustering result
 
@@ -110,7 +106,7 @@ def score_nodes(data_to_score, labels, level):
 
         normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
         scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1) # put the mean of the marker values of a celltype into a matrix (indexed by the celltypes)
-    scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values) # index=data_to_score.index
+    scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values, index=data_to_score.index)
     return scores_pd
 
 
@@ -127,6 +123,7 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
     print(level)
 
     if len(sample_data) < REQUIRED_CELLS_FOR_CLUSTERING:
+        print("less than min sample_size")
         # This will score each cell without need for clustering, the constant should be changed after testing for single cell clustering
         data_to_score = sample_data
         scores_pd = score_nodes(data_to_score, labels, level)
@@ -136,6 +133,7 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
         labels_df = labels_df.set_index(sample_data.index)
 
     else: # if enough cells, do clustering
+
         # get a table, rows are the clusters and columns are the cell-types, having the scoring, highest the more probable
         data_to_score, labeled = cluster_cells(sample_data, labels, level)
         scores_pd = score_nodes(data_to_score, labels, level)
