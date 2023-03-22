@@ -4,6 +4,7 @@ from . import label_logic
 import numpy as np
 import pandas as pd
 import networkx as nx
+import math
 
 
 # create output folder
@@ -128,6 +129,27 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
         return reusable_labels
 
 
+def get_final_prob(table):
+    new_column = []
+    for index, row in table.iterrows():
+        lst = list(row)
+        for i in range(len(lst) - 1, -1, -1):
+            if not math.isnan(lst[i]):
+                new_column.append(lst[i])
+                break
+    return new_column
+
+
+def get_final_cells(table):
+    new_column = []
+    for index, row in table.iterrows():
+        lst = list(row)
+        for i in range(len(lst) - 1, -1, -1):
+            if lst[i] == lst[i]:
+                new_column.append(lst[i])
+                break
+    return new_column
+
 def run_classify(input_files, logic, output_folder, depth, output, tree):
     for file in input_files:
         if depth < 0:
@@ -136,6 +158,11 @@ def run_classify(input_files, logic, output_folder, depth, output, tree):
             previous_labels = pd.DataFrame()
 
         result_labels, prob_table = classify.run(input_files[file], file, logic, output_folder, depth, previous_labels, tree)
+        final_cell_type = get_final_cells(result_labels)
+        final_prob = get_final_prob(prob_table)
+
+        result_labels["final_label"] = final_cell_type
+        prob_table["final_probability"] = final_prob
 
         # write CSVs inside a new labels folder, one file per sample
         result_labels.to_csv(f'{output_folder}{os.sep}labels_{file}')

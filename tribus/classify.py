@@ -151,8 +151,6 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
         labels_df = labels_df.set_index(sample_data.index)
         prob_df = pd.DataFrame(prob_list)
         prob_df = prob_df.set_index(sample_data.index)
-        print(sample_data)
-        print(prob_df)
 
 
     else: # if enough cells, do clustering
