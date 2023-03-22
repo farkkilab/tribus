@@ -47,7 +47,7 @@ def build_tree(logic, graph, sheet_name, sheet_names, depth, current_depth):
     if current_depth > depth:
         return
     sheet = logic[sheet_name]
-    cell_types = sheet.columns[1:]
+    cell_types = sheet.columns
     for i in cell_types:
         if i in sheet_names:
             graph.add_edge(sheet_name, i)
