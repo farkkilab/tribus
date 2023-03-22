@@ -8,7 +8,9 @@ import os
 ## Constants
 MAX_PERCENTILE = 99
 #REQUIRED_CELLS_FOR_CLUSTERING = 100
-REQUIRED_CELLS_FOR_CLUSTERING = 1_000
+REQUIRED_CELLS_FOR_CLUSTERING = 5000
+THRESHOLD_LOW = 0.5
+THRESHOLD_CLOSE = 0.02
 
 
 def cluster_cells(sample_data, labels, level):
@@ -16,7 +18,6 @@ def cluster_cells(sample_data, labels, level):
     grid_size = int(np.sqrt(np.sqrt(len(sample_data)) * 5))
     marker_data = sample_data[labels[level].index.values].to_numpy()
 
-    # TODO: choose clustering variables based on data length and width, number of labels in level and number of levels
     som = SOM(m=grid_size, n=grid_size, dim=marker_data.shape[1])
     som.fit(marker_data)
     predictions = som.predict(marker_data)
@@ -49,7 +50,7 @@ def clusterCellsPhenoGraph(grid_size, sample_data, labels, level):
 
 def processLevel(level):
     '''parallelize for samples if possible'''
-    # TODO PARALLELIZE HERE
+    # TODO PARALLELIZE HERE, probably on different branches on the lineage tree
     return ('')
 
 
@@ -80,6 +81,20 @@ def normalize_scores(x):
     res = 1 - ((x - np.min(x)) / (np.max(x) - np.min(x)))
     return res
 
+
+def get_cell_type(x):
+    sorted_ = np.sort(x)
+    highest = sorted_[-1]
+    second_highest = sorted_[-2]
+    if highest < THRESHOLD_LOW:
+        return 'other_low'
+    if highest-second_highest < THRESHOLD_CLOSE:
+        return 'other_close'
+    return x.idxmax()
+
+
+def get_probabilities(x):
+    return np.max(x)
 
 def score_nodes(data_to_score, labels, level):
     """
@@ -127,10 +142,18 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
         # This will score each cell without need for clustering, the constant should be changed after testing for single cell clustering
         data_to_score = sample_data
         scores_pd = score_nodes(data_to_score, labels, level)
-        scores_pd['label'] = scores_pd.idxmax(axis=1)
-        labels_list = scores_pd.label
+        scores_labels = pd.DataFrame()
+        scores_labels['cell_label'] = scores_pd.apply(get_cell_type, axis=1)
+        scores_labels['probability'] = scores_pd.apply(get_probabilities, axis=1)
+        labels_list = scores_labels.cell_label
+        prob_list = scores_labels.probability
         labels_df = pd.DataFrame(labels_list)
         labels_df = labels_df.set_index(sample_data.index)
+        prob_df = pd.DataFrame(prob_list)
+        prob_df = prob_df.set_index(sample_data.index)
+        print(sample_data)
+        print(prob_df)
+
 
     else: # if enough cells, do clustering
 
@@ -138,20 +161,26 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
         data_to_score, labeled = cluster_cells(sample_data, labels, level)
         scores_pd = score_nodes(data_to_score, labels, level)
         # assign highest scored label
-        scores_pd['label'] = scores_pd.idxmax(axis=1)
-        labels_list = scores_pd.loc[labeled['label']].label # according to the cluster labels, assign the most probable cell-type to each cell
+        scores_labels = pd.DataFrame()
+        scores_labels['cell_label'] = scores_pd.apply(get_cell_type, axis=1)
+        scores_labels['probability'] = scores_pd.apply(get_probabilities, axis=1)
+        labels_list = scores_labels.loc[labeled['label']].cell_label # according to the cluster labels, assign the most probable cell-type to each cell
+        prob_list = scores_labels.loc[labeled['label']].probability
         labels_df = pd.DataFrame(labels_list)
         labels_df = labels_df.set_index(labeled.index)
+        prob_df = pd.DataFrame(prob_list)
+        prob_df = prob_df.set_index(labeled.index)
 
     scores_pd.to_csv(scores_folder + os.sep + 'scores_' + level + '_' + samplefilename)
     data_to_score.to_csv(scores_folder + os.sep + 'data_to_score_' + level + '_' + samplefilename)
 
     # TODO: Write "Other" if highest score is too low
-    labels_df = labels_df.rename(columns={'label': level})
-    return labels_df
+    labels_df = labels_df.rename(columns={'cell_label': level})
+    prob_df = prob_df.rename(columns={'probability': level})
+    return labels_df, prob_df
 
 
-def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, previous_labels,
+def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, prob_table, previous_labels,
              scores_folder, filename):
     if depth < max_depth:
         # check whether there is previously available data, so not necessary to rerun some parts of tribus
@@ -167,22 +196,24 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
             filtered_markers = list(labels[node].loc[(labels[node] != 0).any(axis=1)].index)
             labels[node] = labels[node].loc[filtered_markers]
 
-            result = clustering(data_subset, labels, node, scores_folder, filename)
+            result, prob = clustering(data_subset, labels, node, scores_folder, filename)
             print(f'{node}, clustering done')
 
         if result_table.empty:
             result_table = result
+            prob_table = prob
         else:
             result_table = result_table.join(result)
+            prob_table = prob_table.join(prob)
 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
-            result_table = traverse(tree, depth + 1, sample_data, labels, max_depth, j, i, result_table,
+            result_table, prob_table = traverse(tree, depth + 1, sample_data, labels, max_depth, j, i, result_table, prob_table,
                                     previous_labels, scores_folder, filename)
-    return result_table
+    return result_table, prob_table
 
 
-def run(sample_data, file_ename, labels, output_folder, level_ids, previous_labels, tree):
+def run(sample_data, file_name, labels, output_folder, level_ids, previous_labels, tree):
     """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
     Keyword arguments:
       input_path      -- Pandas dataframe
@@ -194,9 +225,10 @@ def run(sample_data, file_ename, labels, output_folder, level_ids, previous_labe
     Path(scores_folder).mkdir(parents=True, exist_ok=True)
 
     result_table = pd.DataFrame()
-    result_table = traverse(tree, 0, sample_data, labels, level_ids, "Global", pd.DataFrame(), result_table,
-                            previous_labels, scores_folder, file_ename)
-    return result_table
+    prob_table = pd.DataFrame()
+    result_table, prob_table = traverse(tree, 0, sample_data, labels, level_ids, "Global", pd.DataFrame(), result_table, prob_table,
+                            previous_labels, scores_folder, file_name)
+    return result_table, prob_table
     # return full label table
 
 # EOF
