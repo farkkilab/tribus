@@ -135,9 +135,10 @@ def run_classify(input_files, logic, output_folder, depth, output, tree):
         else:
             previous_labels = pd.DataFrame()
 
-        result_labels = classify.run(input_files[file], file, logic, output_folder, depth, previous_labels, tree)
+        result_labels, prob_table = classify.run(input_files[file], file, logic, output_folder, depth, previous_labels, tree)
 
         # write CSVs inside a new labels folder, one file per sample
         result_labels.to_csv(f'{output_folder}{os.sep}labels_{file}')
+        prob_table.to_csv(f'{output_folder}{os.sep}prob_{file}')
     return True
 
