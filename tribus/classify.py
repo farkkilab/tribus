@@ -9,8 +9,8 @@ import os
 MAX_PERCENTILE = 99
 #REQUIRED_CELLS_FOR_CLUSTERING = 100
 REQUIRED_CELLS_FOR_CLUSTERING = 5000
-THRESHOLD_LOW = 0.5
-THRESHOLD_CLOSE = 0.02
+THRESHOLD_LOW = 0.4
+THRESHOLD_CLOSE = 0.01
 
 
 def cluster_cells(sample_data, labels, level):
@@ -82,14 +82,14 @@ def normalize_scores(x):
     return res
 
 
-def get_cell_type(x):
+def get_cell_type(x, level):
     sorted_ = np.sort(x)
     highest = sorted_[-1]
     second_highest = sorted_[-2]
     if highest < THRESHOLD_LOW:
-        return 'other_low'
+        return f'other_{level}'
     if highest-second_highest < THRESHOLD_CLOSE:
-        return 'other_close'
+        return f'undefined_{level}'
     return x.idxmax()
 
 
@@ -143,7 +143,7 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
         data_to_score = sample_data
         scores_pd = score_nodes(data_to_score, labels, level)
         scores_labels = pd.DataFrame()
-        scores_labels['cell_label'] = scores_pd.apply(get_cell_type, axis=1)
+        scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level), axis=1)
         scores_labels['probability'] = scores_pd.apply(get_probabilities, axis=1)
         labels_list = scores_labels.cell_label
         prob_list = scores_labels.probability
@@ -160,7 +160,7 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
         scores_pd = score_nodes(data_to_score, labels, level)
         # assign highest scored label
         scores_labels = pd.DataFrame()
-        scores_labels['cell_label'] = scores_pd.apply(get_cell_type, axis=1)
+        scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level), axis=1)
         scores_labels['probability'] = scores_pd.apply(get_probabilities, axis=1)
         labels_list = scores_labels.loc[labeled['label']].cell_label # according to the cluster labels, assign the most probable cell-type to each cell
         prob_list = scores_labels.loc[labeled['label']].probability
