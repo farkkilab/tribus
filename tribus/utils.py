@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 import math
+import time
 
 
 # create output folder
@@ -28,9 +29,12 @@ def validate_input_data(input_folder, logic):
     for file in filenames:
         if file.startswith('.'):
             continue
-        print(file)
+
         input_path = os.path.join(input_folder, file)
         df = pd.read_csv(input_path, index_col=0)
+        if len(df.index) != len(np.unique(df.index)):
+            valid = False
+            print(f"Cell Ids are not unique in file {file}")
         sample_files[file] = df
 
         # Validate if all marker in the input data
@@ -42,7 +46,7 @@ def validate_input_data(input_folder, logic):
     return valid, sample_files
 
 
-def build_tree(logic, graph, sheet_name, sheet_names, depth, current_depth):
+def build_tree_(logic, graph, sheet_name, sheet_names, depth, current_depth):
     # TODO new termination state??
     if current_depth > depth:
         return
@@ -51,15 +55,15 @@ def build_tree(logic, graph, sheet_name, sheet_names, depth, current_depth):
     for i in cell_types:
         if i in sheet_names:
             graph.add_edge(sheet_name, i)
-            build_tree(logic, graph, i, sheet_names, depth, current_depth + 1)
+            build_tree_(logic, graph, i, sheet_names, depth, current_depth + 1)
 
 
-def build_tree_from_file(logic, depth):
+def build_tree(logic, depth):
     # create the lineage tree from levels
     graph = nx.DiGraph()
     sheet_names = list(logic.keys())
     graph.add_node(sheet_names[0])
-    build_tree(logic, graph, sheet_names[0], sheet_names, depth, 1)
+    build_tree_(logic, graph, sheet_names[0], sheet_names, depth, 1)
     return graph
 
 
@@ -84,7 +88,7 @@ def validate_gate_logic(excel_file, depth):
                 valid = False
                 print(f"No positive marker for cell-type {c}")
 
-    tree = build_tree_from_file(logic, depth)
+    tree = build_tree(logic, depth)
     return valid, logic, tree
 
 
@@ -129,26 +133,8 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
         return reusable_labels
 
 
-def get_final_prob(table):
-    new_column = []
-    for index, row in table.iterrows():
-        lst = list(row)
-        for i in range(len(lst) - 1, -1, -1):
-            if not math.isnan(lst[i]):
-                new_column.append(lst[i])
-                break
-    return new_column
 
 
-def get_final_cells(table):
-    new_column = []
-    for index, row in table.iterrows():
-        lst = list(row)
-        for i in range(len(lst) - 1, -1, -1):
-            if lst[i] == lst[i]:
-                new_column.append(lst[i])
-                break
-    return new_column
 
 def run_classify(input_files, logic, output_folder, depth, output, tree):
     for file in input_files:
@@ -157,12 +143,11 @@ def run_classify(input_files, logic, output_folder, depth, output, tree):
         else:
             previous_labels = pd.DataFrame()
 
+        start = time.time()
         result_labels, prob_table = classify.run(input_files[file], file, logic, output_folder, depth, previous_labels, tree)
-        final_cell_type = get_final_cells(result_labels)
-        final_prob = get_final_prob(prob_table)
+        end = time.time()
+        print(end - start)
 
-        result_labels["final_label"] = final_cell_type
-        prob_table["final_probability"] = final_prob
 
         # write CSVs inside a new labels folder, one file per sample
         result_labels.to_csv(f'{output_folder}{os.sep}labels_{file}')

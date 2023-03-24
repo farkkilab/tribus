@@ -72,7 +72,7 @@ def main(argv=None):
                 output_folder = os.path.join(args.output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
                 # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
                 Path(output_folder).mkdir(parents=True, exist_ok=True)
-                print('print output folder',output_folder)
+                print('print output folder', output_folder)
                 # store the logic file in this folder, so the user can always go back to see which logic created those results
                 shutil.copy(args.logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
                 # This call does everything
