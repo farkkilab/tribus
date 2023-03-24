@@ -63,8 +63,9 @@ def main(argv=None):
     
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
-
             run_tribus_from_file(args.depth, args.logic, args.input, args.output)
+            # store the logic file in this folder, so the user can always go back to see which logic created those results
+            shutil.copy(args.logic, args.output + os.sep + 'expected_phenotypes' + '.xlsx')
         else:
             print('input paths are not a directory and a file.')
     elif args.command == 'preview':
@@ -92,11 +93,9 @@ def run_tribus_from_file(depth, logic, input, output):
         # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
         Path(output_folder).mkdir(parents=True, exist_ok=True)
         print('print output folder', output_folder)
-        # store the logic file in this folder, so the user can always go back to see which logic created those results
-        shutil.copy(logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
-        # This call does everything
 
-        utils.run_classify(input_files, logic, depth, tree)
+        # This call does everything
+        utils.run_classify(input_files, logic, output_folder, depth, output, tree)
     else:
         print('invalid data: check logs.')
 

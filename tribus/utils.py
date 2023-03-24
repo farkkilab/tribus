@@ -102,8 +102,8 @@ def validate_inputs(input_files, logic):
 
     valid_input = True
 
-    for df in input_files:
-        if not validate_input_data(df, logic):
+    for key in input_files:
+        if not validate_input_data(input_files[key], logic):
             valid_input = False
 
     if valid_input and valid_logic:

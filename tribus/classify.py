@@ -237,9 +237,11 @@ def run(sample_data, labels, depth, previous_labels, tree):
       labels          -- Pandas dataframe
       output_folder   -- May be used for intermediate plots or for probabilities/scores
     """
+    """
     # create an output folder for intermediate results
     scores_folder = os.path.join(output_folder, 'celltype_scores')
     Path(scores_folder).mkdir(parents=True, exist_ok=True)
+    """
 
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
