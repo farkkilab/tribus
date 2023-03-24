@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn_som.som import SOM
 from pathlib import Path
 import os
+import math
 
 ## Constants
 MAX_PERCENTILE = 99
@@ -134,7 +135,7 @@ def subset(sample_data, current_level, previous_level, previous_labels):
     return new_data
 
 
-def clustering(sample_data, labels, level, scores_folder, samplefilename):
+def clustering(sample_data, labels, level):
     print(level)
 
     if len(sample_data) < REQUIRED_CELLS_FOR_CLUSTERING:
@@ -169,8 +170,6 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
         prob_df = pd.DataFrame(prob_list)
         prob_df = prob_df.set_index(labeled.index)
 
-    scores_pd.to_csv(scores_folder + os.sep + 'scores_' + level + '_' + samplefilename)
-    data_to_score.to_csv(scores_folder + os.sep + 'data_to_score_' + level + '_' + samplefilename)
 
     # TODO: Write "Other" if highest score is too low
     labels_df = labels_df.rename(columns={'cell_label': level})
@@ -179,7 +178,7 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
 
 
 def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, prob_table,
-             previous_labels, scores_folder, filename):
+             previous_labels):
     if depth < max_depth:
         # check whether there is previously available data, so not necessary to rerun some parts of tribus
         if node in previous_labels.columns:
@@ -193,7 +192,7 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
             # only using the markers which are containing different values than zeros
             filtered_markers = list(labels[node].loc[(labels[node] != 0).any(axis=1)].index)
             labels[node] = labels[node].loc[filtered_markers]
-            result, prob = clustering(data_subset, labels, node, scores_folder, filename)
+            result, prob = clustering(data_subset, labels, node)
             print(f'{node}, clustering done')
 
         if result_table.empty:
@@ -206,7 +205,7 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
             result_table, prob_table = traverse(tree, depth + 1, sample_data, labels, max_depth, j, i, result_table,
-                                                prob_table, previous_labels, scores_folder, filename)
+                                                prob_table, previous_labels)
     return result_table, prob_table
 
 def get_final_prob(table):
@@ -230,7 +229,8 @@ def get_final_cells(table):
                 break
     return new_column
 
-def run(sample_data, file_name, labels, output_folder, depth, previous_labels, tree):
+
+def run(sample_data, labels, depth, previous_labels, tree):
     """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
     Keyword arguments:
       input_path      -- Pandas dataframe
@@ -244,7 +244,7 @@ def run(sample_data, file_name, labels, output_folder, depth, previous_labels, t
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
     result_table, prob_table = traverse(tree, 0, sample_data, labels, depth, "Global", pd.DataFrame(), result_table,
-                                        prob_table, previous_labels, scores_folder, file_name)
+                                        prob_table, previous_labels)
 
     final_cell_type = get_final_cells(result_table)
     final_prob = get_final_prob(prob_table)

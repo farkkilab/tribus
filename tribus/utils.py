@@ -15,15 +15,7 @@ import time
 # levels of calls
 # parse the table into a better structure, list? array? dict?
 
-
-def validate_input_data(input_folder, logic):
-    # TODO: list files in folder. Assume that all files are intended for analysis
-    #   file names are sample names. possibility of using regex later on to get sample names
-    #   check that all headers are the same
-
-    valid = True
-    markers_in_logic = np.unique([marker for key in logic for marker in logic[key].index])
-
+def read_input_files(input_folder):
     sample_files = {}
     filenames = os.listdir(input_folder)
     for file in filenames:
@@ -32,18 +24,29 @@ def validate_input_data(input_folder, logic):
 
         input_path = os.path.join(input_folder, file)
         df = pd.read_csv(input_path, index_col=0)
-        if len(df.index) != len(np.unique(df.index)):
-            valid = False
-            print(f"Cell Ids are not unique in file {file}")
         sample_files[file] = df
 
-        # Validate if all marker in the input data
-        for marker in markers_in_logic:
-            if marker not in df.columns:
-                valid = False
-                print("not all marker are present in the input data")
+    return sample_files
 
-    return valid, sample_files
+
+def validate_input_data(file, logic):
+    # TODO: list files in folder. Assume that all files are intended for analysis
+    #   file names are sample names. possibility of using regex later on to get sample names
+    #   check that all headers are the same
+
+    valid = True
+    markers_in_logic = np.unique([marker for key in logic for marker in logic[key].index])
+    if len(file.index) != len(np.unique(file.index)):
+        valid = False
+        print(f"Cell Ids are not unique in file {file}")
+
+    # Validate if all marker in the input data
+    for marker in markers_in_logic:
+        if marker not in file.columns:
+            valid = False
+            print("not all marker are present in the input data")
+
+    return valid
 
 
 def build_tree_(logic, graph, sheet_name, sheet_names, depth, current_depth):
@@ -67,11 +70,14 @@ def build_tree(logic, depth):
     return graph
 
 
-def validate_gate_logic(excel_file, depth):
-    valid = True
+def read_logic(excel_file):
     df = pd.ExcelFile(excel_file)
     logic = pd.read_excel(df, df.sheet_names, index_col=0)
+    return logic
 
+
+def validate_gate_logic(logic):
+    valid = True
     if len(logic.keys()) != len(np.unique(list(logic.keys()))):
         valid = False
         print("The cell type names are not unique")
@@ -88,19 +94,23 @@ def validate_gate_logic(excel_file, depth):
                 valid = False
                 print(f"No positive marker for cell-type {c}")
 
-    tree = build_tree(logic, depth)
-    return valid, logic, tree
+    return valid
 
 
-def validate_inputs(input_folder, excel_file, depth):
-    valid_logic, logic, tree = validate_gate_logic(excel_file, depth)
-    valid_input, input_files = validate_input_data(input_folder, logic)
+def validate_inputs(input_files, logic):
+    valid_logic = validate_gate_logic(logic)
+
+    valid_input = True
+
+    for df in input_files:
+        if not validate_input_data(df, logic):
+            valid_input = False
 
     if valid_input and valid_logic:
         valid = True
     else:
         valid = False
-    return valid, input_files, logic, tree
+    return valid
 
 
 def traverse(graph, node, old_logic, logic, previous_labels, reusable_labels, old_levels):
@@ -133,9 +143,6 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
         return reusable_labels
 
 
-
-
-
 def run_classify(input_files, logic, output_folder, depth, output, tree):
     for file in input_files:
         if depth < 0:
@@ -144,10 +151,9 @@ def run_classify(input_files, logic, output_folder, depth, output, tree):
             previous_labels = pd.DataFrame()
 
         start = time.time()
-        result_labels, prob_table = classify.run(input_files[file], file, logic, output_folder, depth, previous_labels, tree)
+        result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree)
         end = time.time()
         print(end - start)
-
 
         # write CSVs inside a new labels folder, one file per sample
         result_labels.to_csv(f'{output_folder}{os.sep}labels_{file}')
