@@ -2,8 +2,6 @@
 import numpy as np
 import pandas as pd
 from sklearn_som.som import SOM
-from pathlib import Path
-import os
 import math
 
 ## Constants
@@ -208,6 +206,7 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
                                                 prob_table, previous_labels)
     return result_table, prob_table
 
+
 def get_final_prob(table):
     new_column = []
     for index, row in table.iterrows():
@@ -231,12 +230,6 @@ def get_final_cells(table):
 
 
 def run(sample_data, labels, depth, previous_labels, tree):
-    """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
-    Keyword arguments:
-      input_path      -- Pandas dataframe
-      labels          -- Pandas dataframe
-      output_folder   -- May be used for intermediate plots or for probabilities/scores
-    """
     """
     # create an output folder for intermediate results
     scores_folder = os.path.join(output_folder, 'celltype_scores')

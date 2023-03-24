@@ -1,19 +1,10 @@
 import os, sys, datetime, shutil
 from . import classify
-from . import label_logic
 import numpy as np
 import pandas as pd
 import networkx as nx
-import math
 import time
 
-
-# create output folder
-# check channel names
-# check label logic
-# count all requirements present
-# levels of calls
-# parse the table into a better structure, list? array? dict?
 
 def read_input_files(input_folder):
     sample_files = {}
