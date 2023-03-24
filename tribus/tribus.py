@@ -22,8 +22,11 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 import os, sys, datetime, shutil
 import argparse
 from pathlib import Path
+
+import pandas as pd
 import pkg_resources
 from . import utils
+from . import classify
 
 
 def main(argv=None):
@@ -61,24 +64,7 @@ def main(argv=None):
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
 
-            valid_depth = True
-            if args.depth < 0:
-                valid_depth = args.depth >= 0
-                print("Depth should be positive or zero")
-
-            valid, input_files, logic, tree = utils.validate_inputs(args.input, args.logic, args.depth)
-            if valid and valid_depth:
-                # create output dir if not present, and create a subfolder with current time stamp
-                output_folder = os.path.join(args.output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
-                # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
-                Path(output_folder).mkdir(parents=True, exist_ok=True)
-                print('print output folder', output_folder)
-                # store the logic file in this folder, so the user can always go back to see which logic created those results
-                shutil.copy(args.logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
-                # This call does everything
-                utils.run_classify(input_files, logic, output_folder, args.depth, args.output, tree)
-            else:
-                print('invalid data: check logs.')
+            run_tribus_from_file(args.depth, args.logic, args.input, args.output)
         else:
             print('input paths are not a directory and a file.')
     elif args.command == 'preview':
@@ -88,5 +74,51 @@ def main(argv=None):
     else:
         parser.print_help()
 
+
+def run_tribus_from_file(depth, logic, input, output):
+    valid_depth = True
+    if depth < 0:
+        valid_depth = depth >= 0
+        print("Depth should be positive or zero")
+
+    logic = utils.read_logic(logic)
+    input_files = utils.read_input_files(input)
+    valid = utils.validate_inputs(input_files, logic)
+
+    if valid and valid_depth:
+        tree = utils.build_tree(logic, depth)
+        # create output dir if not present, and create a subfolder with current time stamp
+        output_folder = os.path.join(output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+        # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
+        Path(output_folder).mkdir(parents=True, exist_ok=True)
+        print('print output folder', output_folder)
+        # store the logic file in this folder, so the user can always go back to see which logic created those results
+        shutil.copy(logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
+        # This call does everything
+
+        utils.run_classify(input_files, logic, depth, tree)
+    else:
+        print('invalid data: check logs.')
+
+
+def run_tribus(input_df, logic, depth=1):
+    valid_depth = True
+    if depth < 0:
+        valid_depth = depth >= 0
+        print("Depth should be positive or zero")
+
+    valid_input = utils.validate_input_data(input_df, logic)
+    valid_logic = utils.validate_gate_logic(logic)
+
+    result_table, prob_table = pd.DataFrame()
+
+    if valid_input and valid_logic and valid_depth:
+        tree = utils.build_tree(logic, depth)
+        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree)
+    else:
+        # TODO raise error
+        print('invalid data: check logs.')
+
+    return result_table, prob_table
 
 #EOF
