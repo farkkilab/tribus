@@ -8,7 +8,7 @@ import os
 ## Constants
 MAX_PERCENTILE = 99
 #REQUIRED_CELLS_FOR_CLUSTERING = 100
-REQUIRED_CELLS_FOR_CLUSTERING = 5000
+REQUIRED_CELLS_FOR_CLUSTERING = 0
 THRESHOLD_LOW = 0.4
 THRESHOLD_CLOSE = 0.01
 
@@ -178,8 +178,8 @@ def clustering(sample_data, labels, level, scores_folder, samplefilename):
     return labels_df, prob_df
 
 
-def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, prob_table, previous_labels,
-             scores_folder, filename):
+def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, prob_table,
+             previous_labels, scores_folder, filename):
     if depth < max_depth:
         # check whether there is previously available data, so not necessary to rerun some parts of tribus
         if node in previous_labels.columns:
@@ -193,7 +193,6 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
             # only using the markers which are containing different values than zeros
             filtered_markers = list(labels[node].loc[(labels[node] != 0).any(axis=1)].index)
             labels[node] = labels[node].loc[filtered_markers]
-
             result, prob = clustering(data_subset, labels, node, scores_folder, filename)
             print(f'{node}, clustering done')
 
@@ -206,12 +205,32 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
-            result_table, prob_table = traverse(tree, depth + 1, sample_data, labels, max_depth, j, i, result_table, prob_table,
-                                    previous_labels, scores_folder, filename)
+            result_table, prob_table = traverse(tree, depth + 1, sample_data, labels, max_depth, j, i, result_table,
+                                                prob_table, previous_labels, scores_folder, filename)
     return result_table, prob_table
 
+def get_final_prob(table):
+    new_column = []
+    for index, row in table.iterrows():
+        lst = list(row)
+        for i in range(len(lst) - 1, -1, -1):
+            if not math.isnan(lst[i]):
+                new_column.append(lst[i])
+                break
+    return new_column
 
-def run(sample_data, file_name, labels, output_folder, level_ids, previous_labels, tree):
+
+def get_final_cells(table):
+    new_column = []
+    for index, row in table.iterrows():
+        lst = list(row)
+        for i in range(len(lst) - 1, -1, -1):
+            if lst[i] == lst[i]:
+                new_column.append(lst[i])
+                break
+    return new_column
+
+def run(sample_data, file_name, labels, output_folder, depth, previous_labels, tree):
     """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
     Keyword arguments:
       input_path      -- Pandas dataframe
@@ -224,8 +243,15 @@ def run(sample_data, file_name, labels, output_folder, level_ids, previous_label
 
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
-    result_table, prob_table = traverse(tree, 0, sample_data, labels, level_ids, "Global", pd.DataFrame(), result_table, prob_table,
-                            previous_labels, scores_folder, file_name)
+    result_table, prob_table = traverse(tree, 0, sample_data, labels, depth, "Global", pd.DataFrame(), result_table,
+                                        prob_table, previous_labels, scores_folder, file_name)
+
+    final_cell_type = get_final_cells(result_table)
+    final_prob = get_final_prob(prob_table)
+
+    result_table["final_label"] = final_cell_type
+    prob_table["final_probability"] = final_prob
+
     return result_table, prob_table
     # return full label table
 
