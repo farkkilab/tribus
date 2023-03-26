@@ -22,11 +22,11 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 import os, sys, datetime, shutil
 import argparse
 from pathlib import Path
-
 import pandas as pd
 import pkg_resources
 from . import utils
 from . import classify
+import xlsxwriter
 
 
 def main(argv=None):
@@ -63,8 +63,8 @@ def main(argv=None):
     
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
-
             run_tribus_from_file(args.depth, args.logic, args.input, args.output)
+            # store the logic file in this folder, so the user can always go back to see which logic created those results
         else:
             print('input paths are not a directory and a file.')
     elif args.command == 'preview':
@@ -75,14 +75,14 @@ def main(argv=None):
         parser.print_help()
 
 
-def run_tribus_from_file(depth, logic, input, output):
+def run_tribus_from_file(depth, logic, input_path, output):
     valid_depth = True
     if depth < 0:
         valid_depth = depth >= 0
         print("Depth should be positive or zero")
 
     logic = utils.read_logic(logic)
-    input_files = utils.read_input_files(input)
+    input_files = utils.read_input_files(input_path)
     valid = utils.validate_inputs(input_files, logic)
 
     if valid and valid_depth:
@@ -91,12 +91,15 @@ def run_tribus_from_file(depth, logic, input, output):
         output_folder = os.path.join(output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
         # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
         Path(output_folder).mkdir(parents=True, exist_ok=True)
-        print('print output folder', output_folder)
-        # store the logic file in this folder, so the user can always go back to see which logic created those results
-        shutil.copy(logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
-        # This call does everything
 
-        utils.run_classify(input_files, logic, depth, tree)
+        writer = pd.ExcelWriter(f"{output_folder}/expected_phenotypes.xlsx", engine='xlsxwriter')
+        for key in logic:
+            logic[key].to_excel(writer, sheet_name=key)
+
+        print('print output folder', output_folder)
+
+        # This call does everything
+        utils.run_classify(input_files, logic, output_folder, depth, output, tree)
     else:
         print('invalid data: check logs.')
 

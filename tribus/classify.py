@@ -2,13 +2,10 @@
 import numpy as np
 import pandas as pd
 from sklearn_som.som import SOM
-from pathlib import Path
-import os
 import math
 
 ## Constants
 MAX_PERCENTILE = 99
-#REQUIRED_CELLS_FOR_CLUSTERING = 100
 REQUIRED_CELLS_FOR_CLUSTERING = 0
 THRESHOLD_LOW = 0.4
 THRESHOLD_CLOSE = 0.01
@@ -79,6 +76,9 @@ def normalize_scores(x):
     normalize the values between 0-1
     change the direction of scoring, smaller ones becomes the larger ones and vica versa (inverting)
     """
+    if np.max(x) - np.min(x) == 0:
+        print(x)
+
     res = 1 - ((x - np.min(x)) / (np.max(x) - np.min(x)))
     return res
 
@@ -96,6 +96,7 @@ def get_cell_type(x, level):
 
 def get_probabilities(x):
     return np.max(x)
+
 
 def score_nodes(data_to_score, labels, level):
     """
@@ -208,6 +209,7 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
                                                 prob_table, previous_labels)
     return result_table, prob_table
 
+
 def get_final_prob(table):
     new_column = []
     for index, row in table.iterrows():
@@ -231,15 +233,11 @@ def get_final_cells(table):
 
 
 def run(sample_data, labels, depth, previous_labels, tree):
-    """ Labels one sample file. Iterative function that subsets data based on previous labels until all levels are done.
-    Keyword arguments:
-      input_path      -- Pandas dataframe
-      labels          -- Pandas dataframe
-      output_folder   -- May be used for intermediate plots or for probabilities/scores
     """
     # create an output folder for intermediate results
     scores_folder = os.path.join(output_folder, 'celltype_scores')
     Path(scores_folder).mkdir(parents=True, exist_ok=True)
+    """
 
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
