@@ -6,7 +6,6 @@ import math
 
 ## Constants
 MAX_PERCENTILE = 99
-#REQUIRED_CELLS_FOR_CLUSTERING = 100
 REQUIRED_CELLS_FOR_CLUSTERING = 0
 THRESHOLD_LOW = 0.4
 THRESHOLD_CLOSE = 0.01
@@ -77,6 +76,9 @@ def normalize_scores(x):
     normalize the values between 0-1
     change the direction of scoring, smaller ones becomes the larger ones and vica versa (inverting)
     """
+    if np.max(x) - np.min(x) == 0:
+        print(x)
+
     res = 1 - ((x - np.min(x)) / (np.max(x) - np.min(x)))
     return res
 
@@ -94,6 +96,7 @@ def get_cell_type(x, level):
 
 def get_probabilities(x):
     return np.max(x)
+
 
 def score_nodes(data_to_score, labels, level):
     """
