@@ -113,7 +113,8 @@ def run_tribus(input_df, logic, depth=1):
     valid_input = utils.validate_input_data(input_df, logic)
     valid_logic = utils.validate_gate_logic(logic)
 
-    result_table, prob_table = pd.DataFrame()
+    result_table = pd.DataFrame()
+    prob_table = pd.DataFrame()
 
     if valid_input and valid_logic and valid_depth:
         tree = utils.build_tree(logic, depth)
