@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.cfg
+setup.py
+tribus/Tribus.egg-info/PKG-INFO
+tribus/Tribus.egg-info/SOURCES.txt
+tribus/Tribus.egg-info/dependency_links.txt
+tribus/Tribus.egg-info/entry_points.txt
+tribus/Tribus.egg-info/requires.txt
+tribus/Tribus.egg-info/top_level.txt
