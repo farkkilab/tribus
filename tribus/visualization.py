@@ -125,7 +125,6 @@ def umap_vis(sample_file, labels, markers, save=False, fname=None,  level="Globa
     table.loc[:, 'labels'] = filtered_labels
     markers.append('labels')
 
-    print("before umap new")
     proj_2d = pd.DataFrame(
         data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
                   min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered), columns=["component 1", "component 2"])
@@ -133,10 +132,7 @@ def umap_vis(sample_file, labels, markers, save=False, fname=None,  level="Globa
     fig, ax = plt.subplots(rows, 3, figsize=(25, 30))
     fig.suptitle(title, fontsize=30)
 
-    print("after umap new")
-
     for i in range(len(markers)):
-        print(markers[i])
         if markers[i] == 'labels':
             nr_of_colors = len(cell_types)
             palette_ = sns.color_palette(palette_cell, nr_of_colors)
