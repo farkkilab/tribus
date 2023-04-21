@@ -75,13 +75,21 @@ def main(argv=None):
         parser.print_help()
 
 
-def run_tribus_from_file(depth, logic, input_path, output):
+def run_tribus_from_file(input_path, output, logic_path, depth = 1):
+    '''Running tribus on multiple samples
+    input_path: path for the folder, which contains the sample files
+    output: path, where tribus will generate the output folder (named with timestamp) containing the results
+    logic_path: path fot the logic file
+    depth: how many levels should tribus run the analysis
+    '''
+
     valid_depth = True
+    # check if input parameters are suitable
     if depth < 0:
         valid_depth = depth >= 0
         print("Depth should be positive or zero")
 
-    logic = utils.read_logic(logic)
+    logic = utils.read_logic(logic_path)
     input_files = utils.read_input_files(input_path)
     valid = utils.validate_inputs(input_files, logic)
 
@@ -92,6 +100,7 @@ def run_tribus_from_file(depth, logic, input_path, output):
         # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
         Path(output_folder).mkdir(parents=True, exist_ok=True)
 
+        #save the logic table, so the user will know what logic was used for which results
         writer = pd.ExcelWriter(f"{output_folder}/expected_phenotypes.xlsx", engine='xlsxwriter')
         for key in logic:
             logic[key].to_excel(writer, sheet_name=key)

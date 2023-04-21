@@ -7,6 +7,11 @@ import time
 
 
 def read_input_files(input_folder):
+    '''
+    read in all the sample file from the input folder
+    input_folder: path for the input folder
+    reurns: dictionary of the sample files, where keys are the sample names and values are dataframes
+    '''
     sample_files = {}
     filenames = os.listdir(input_folder)
     for file in filenames:
@@ -21,9 +26,13 @@ def read_input_files(input_folder):
 
 
 def validate_input_data(file, logic):
-    # TODO: list files in folder. Assume that all files are intended for analysis
-    #   file names are sample names. possibility of using regex later on to get sample names
-    #   check that all headers are the same
+    '''
+    Validate one input file:
+    - all markers in logic is present in the sample files
+    - all cell ID is unique in a sample
+    file: one sample
+    logic: dictionary of the logic
+    '''
 
     valid = True
     markers_in_logic = np.unique([marker for key in logic for marker in logic[key].index])
@@ -42,6 +51,9 @@ def validate_input_data(file, logic):
 
 def build_tree_(logic, graph, sheet_name, sheet_names, depth, current_depth):
     # TODO new termination state??
+    '''
+    recursive tree building
+    '''
     if current_depth > depth:
         return
     sheet = logic[sheet_name]
@@ -53,7 +65,12 @@ def build_tree_(logic, graph, sheet_name, sheet_names, depth, current_depth):
 
 
 def build_tree(logic, depth):
-    # create the lineage tree from levels
+    '''
+    create the lineage tree from the logic levels
+    logic: dictionary of the logic
+    depth: integer
+    returns: network x diGraph object
+    '''
     graph = nx.DiGraph()
     sheet_names = list(logic.keys())
     graph.add_node(sheet_names[0])
@@ -62,12 +79,23 @@ def build_tree(logic, depth):
 
 
 def read_logic(excel_file):
+    '''
+    read-in logic file
+    excel_file: path for the logic file
+    returns: a dictionary, where keys are the level IDs, while values are dataframes
+    '''
     df = pd.ExcelFile(excel_file)
     logic = pd.read_excel(df, df.sheet_names, index_col=0)
     return logic
 
 
 def validate_gate_logic(logic):
+    '''
+    validate the logic:
+    - if all cell type names are unique
+    - if level ID is present in a previous level as a cell-type
+    returns: bool
+    '''
     valid = True
     if len(logic.keys()) != len(np.unique(list(logic.keys()))):
         valid = False
@@ -79,16 +107,22 @@ def validate_gate_logic(logic):
             if key not in all_cell_type:
                 valid = False
                 print(f"{key} is not present in previous cell type description table")
-        for c in logic[key].columns:
+        '''for c in logic[key].columns:
             all_cell_type.append(c)
             if 1 not in list(logic[key][c]):
                 valid = False
-                print(f"No positive marker for cell-type {c}")
+                print(f"No positive marker for cell-type {c}")'''
 
     return valid
 
 
 def validate_inputs(input_files, logic):
+    '''
+    check whether the input files and the logic file are meeting the required dataformat
+    input_file: dictionary of sample files
+    logic: dictionary of logic
+    return: bool
+    '''
     valid_logic = validate_gate_logic(logic)
 
     valid_input = True
@@ -105,12 +139,22 @@ def validate_inputs(input_files, logic):
 
 
 def traverse(graph, node, old_logic, logic, previous_labels, reusable_labels, old_levels):
+    '''
+    traversing the lineage tree for the re-entry function
+    graph: networkx digraph (lineage tre)
+    node: string (level name)
+    old_logic: dictionary with the old logic
+    logic: ictionary with the current logic
+    previous_labels: dataframe
+    reusable_labels: dataframe
+    old_levels: list
+    '''
+
     if node in old_levels and old_logic[node].equals(logic[node]) and node in previous_labels.columns:
         reusable_labels[node] = previous_labels[node]
         out_edges = graph.out_edges(node)
         for i, j in out_edges:
             traverse(graph, j, old_logic, logic, previous_labels, reusable_labels, old_levels)
-
 
 def re_entry(output, logic, depth, sample_name, tree, output_folder):
     folders = []
@@ -135,6 +179,10 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
 
 
 def run_classify(input_files, logic, output_folder, depth, output, tree):
+    '''
+    running re-entry and tribus on all the sample files
+
+    '''
     for file in input_files:
         if depth < 0:
             previous_labels = re_entry(output, logic, depth, file, tree, output_folder)
@@ -142,7 +190,7 @@ def run_classify(input_files, logic, output_folder, depth, output, tree):
             previous_labels = pd.DataFrame()
 
         start = time.time()
-        result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree)
+        result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=output_folder)
         end = time.time()
         print(end - start)
 

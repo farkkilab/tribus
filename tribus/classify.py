@@ -110,6 +110,9 @@ def score_nodes(data_to_score, labels, level):
         list_positive = list(
             level_logic_df.loc[level_logic_df[cell_type] == 1].index)  # get markers with positive scores
 
+        if list_positive == 0:
+            continue
+
         gating_positive = data_to_score[list_positive].to_numpy()  # rows: clusters, columns: positive markers
         marker_scores_positive = np.apply_along_axis(score_marker_pos, 0, gating_positive)
 
@@ -179,7 +182,7 @@ def clustering(sample_data, labels, level):
 
 
 def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, prob_table,
-             previous_labels):
+             previous_labels, output=None):
     if depth < max_depth:
         # check whether there is previously available data, so not necessary to rerun some parts of tribus
         if node in previous_labels.columns:
@@ -202,6 +205,10 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
         else:
             result_table = result_table.join(result)
             prob_table = prob_table.join(prob)
+
+        if output is not None:
+            a = True
+            # TODO: do the visualisation here, save to output folder, name by the level
 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
@@ -232,17 +239,23 @@ def get_final_cells(table):
     return new_column
 
 
-def run(sample_data, labels, depth, previous_labels, tree):
+def run(sample_data, logic, depth, previous_labels, tree, output=None):
     """
-    # create an output folder for intermediate results
-    scores_folder = os.path.join(output_folder, 'celltype_scores')
-    Path(scores_folder).mkdir(parents=True, exist_ok=True)
+    tribus main function, running the actual analysis by traversing the lineage tree
+    sample_data: dataframe (one sample)
+    labels: dictionary (logic)
+    depth: integer
+    previous_labels: dataframe
+    tree: networkx digraph
+    output: string (data path)
+
+    returns: 2 dataframe, labels and probabilities
     """
 
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
-    result_table, prob_table = traverse(tree, 0, sample_data, labels, depth, "Global", pd.DataFrame(), result_table,
-                                        prob_table, previous_labels)
+    result_table, prob_table = traverse(tree, 0, sample_data, logic, depth, "Global", pd.DataFrame(), result_table,
+                                        prob_table, previous_labels, output)
 
     final_cell_type = get_final_cells(result_table)
     final_prob = get_final_prob(prob_table)
