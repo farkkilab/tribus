@@ -5,7 +5,8 @@ import scipy.stats as stats
 from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
 import matplotlib
-from umap import UMAP
+# from umap import UMAP
+import umap.umap_ as umap
 import math
 import matplotlib.backends.backend_pdf
 from matplotlib.patches import Patch
@@ -126,7 +127,7 @@ def umap_vis(sample_file, labels, markers, save=False, fname=None,  level="Globa
     markers.append('labels')
 
     proj_2d = pd.DataFrame(
-        data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
+        data=umap.UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
                   min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered), columns=["component 1", "component 2"])
     rows = math.ceil(len(markers) / 3)
     fig, ax = plt.subplots(rows, 3, figsize=(25, 30))
@@ -138,12 +139,11 @@ def umap_vis(sample_file, labels, markers, save=False, fname=None,  level="Globa
             palette_ = sns.color_palette(palette_cell, nr_of_colors)
             proj_2d[markers[i]] = table[markers[i]]
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
-                            hue=markers[i], palette=palette_)
+                            hue=markers[i], s=1, palette=palette_)
         else:
             proj_2d[markers[i]] = table[markers[i]]
-
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
-                            hue=markers[i], palette=palette_markers)
+                            hue=markers[i], s=1, palette=palette_markers)
     if save:
         plt.save(fname, dpi=dpi)
     else:
