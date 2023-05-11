@@ -63,7 +63,7 @@ def main(argv=None):
     
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
-            run_tribus_from_file(args.depth, args.logic, args.input, args.output)
+            run_tribus_from_file(args.input, args.output, args.logic, args.depth)
             # store the logic file in this folder, so the user can always go back to see which logic created those results
         else:
             print('input paths are not a directory and a file.')
@@ -75,12 +75,14 @@ def main(argv=None):
         parser.print_help()
 
 
-def run_tribus_from_file(input_path, output, logic_path, depth = 1):
+def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=False, normalization=None):
     '''Running tribus on multiple samples
-    input_path: path for the folder, which contains the sample files
-    output: path, where tribus will generate the output folder (named with timestamp) containing the results
-    logic_path: path fot the logic file
-    depth: how many levels should tribus run the analysis
+    input_path: string (path for the folder, which contains the sample files)
+    output: string (path, where tribus will generate the output folder (named with timestamp) containing the results)
+    logic_path: string (path for the logic file)
+    depth: integer (how many levels should tribus run the analysis)
+    save_figures: bool
+    it will automatically save the results into the output folder
     '''
 
     valid_depth = True
@@ -108,12 +110,12 @@ def run_tribus_from_file(input_path, output, logic_path, depth = 1):
         print('print output folder', output_folder)
 
         # This call does everything
-        utils.run_classify(input_files, logic, output_folder, depth, output, tree)
+        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=None)
     else:
-        print('invalid data: check logs.')
+        raise AssertionError('invalid data: check logs.')
 
 
-def run_tribus(input_df, logic, depth=1):
+def run_tribus(input_df, logic, depth=1, normalization=None):
     valid_depth = True
     if depth < 0:
         valid_depth = depth >= 0
@@ -127,7 +129,7 @@ def run_tribus(input_df, logic, depth=1):
 
     if valid_input and valid_logic and valid_depth:
         tree = utils.build_tree(logic, depth)
-        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree)
+        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=None)
     else:
         # TODO raise error
         print('invalid data: check logs.')

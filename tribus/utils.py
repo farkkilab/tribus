@@ -9,8 +9,8 @@ import time
 def read_input_files(input_folder):
     '''
     read in all the sample file from the input folder
-    input_folder: path for the input folder
-    reurns: dictionary of the sample files, where keys are the sample names and values are dataframes
+    input_folder: string (path for the input folder)
+    reurns: dictionary of the dataframes (where keys are the sample names and values are sample files)
     '''
     sample_files = {}
     filenames = os.listdir(input_folder)
@@ -30,8 +30,9 @@ def validate_input_data(file, logic):
     Validate one input file:
     - all markers in logic is present in the sample files
     - all cell ID is unique in a sample
-    file: one sample
-    logic: dictionary of the logic
+    file: dataframe (one sample)
+    logic: dictionary
+    returns: bool
     '''
 
     valid = True
@@ -44,7 +45,7 @@ def validate_input_data(file, logic):
     for marker in markers_in_logic:
         if marker not in file.columns:
             valid = False
-            print("not all marker are present in the input data")
+            print(f"{marker} is not present in the input data")
 
     return valid
 
@@ -81,8 +82,8 @@ def build_tree(logic, depth):
 def read_logic(excel_file):
     '''
     read-in logic file
-    excel_file: path for the logic file
-    returns: a dictionary, where keys are the level IDs, while values are dataframes
+    excel_file: string (path for the logic file)
+    returns: dictionary (where keys are the level IDs, while values are dataframes)
     '''
     df = pd.ExcelFile(excel_file)
     logic = pd.read_excel(df, df.sheet_names, index_col=0)
@@ -178,10 +179,10 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
         return reusable_labels
 
 
-def run_classify(input_files, logic, output_folder, depth, output, tree):
+def run_classify(input_files, logic, output_folder, depth, output, tree, save_figures=False):
     '''
     running re-entry and tribus on all the sample files
-
+    it will automatically save the results into the output folder
     '''
     for file in input_files:
         if depth < 0:
@@ -190,9 +191,13 @@ def run_classify(input_files, logic, output_folder, depth, output, tree):
             previous_labels = pd.DataFrame()
 
         start = time.time()
-        result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=output_folder)
+        if save_figures:
+            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree,
+                                                     output=output)
+        else:
+            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=None, normalization=None)
         end = time.time()
-        print(end - start)
+        print((end - start)/60, "minutes")
 
         # write CSVs inside a new labels folder, one file per sample
         result_labels.to_csv(f'{output_folder}{os.sep}labels_{file}')
