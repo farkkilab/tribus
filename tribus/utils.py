@@ -179,7 +179,7 @@ def re_entry(output, logic, depth, sample_name, tree, output_folder):
         return reusable_labels
 
 
-def run_classify(input_files, logic, output_folder, depth, output, tree, save_figures=False):
+def run_classify(input_files, logic, output_folder, depth, output, tree, save_figures=False, normalization=None):
     '''
     running re-entry and tribus on all the sample files
     it will automatically save the results into the output folder
@@ -195,7 +195,7 @@ def run_classify(input_files, logic, output_folder, depth, output, tree, save_fi
             result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree,
                                                      output=output)
         else:
-            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=None, normalization=None)
+            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=output_folder, normalization=normalization)
         end = time.time()
         print((end - start)/60, "minutes")
 

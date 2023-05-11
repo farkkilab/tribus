@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn_som.som import SOM
 import math
+from visualization import umap_vis, correlation_matrix, heatmap_for_median_expression
 from . import visualization
 
 ## Constants
@@ -259,6 +260,7 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
 
         if output is not None:
             a = True
+            #correlation_matrix(data_subset, markers=list(logic[node].index), level=node, save=True, fname=f'{output}/correlation_{node}')
             # correlation_matrix(data_subset, list(logic[node].index), save = True, fname = )
 
         out_edges = tree.out_edges(node)
@@ -306,7 +308,7 @@ def run(sample_data, logic, depth, previous_labels, tree, output=None, normaliza
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
     result_table, prob_table = traverse(tree, sample_data, logic, depth, 0, "Global", pd.DataFrame(), result_table,
-                                        prob_table, previous_labels, output, normalization=None)
+                                        prob_table, previous_labels, output, normalization=normalization)
 
     final_cell_type = get_final_cells(result_table)
     final_prob = get_final_prob(prob_table)
