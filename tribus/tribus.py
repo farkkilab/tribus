@@ -110,7 +110,7 @@ def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=F
         print('print output folder', output_folder)
 
         # This call does everything
-        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=None)
+        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=normalization)
     else:
         raise AssertionError('invalid data: check logs.')
 
@@ -129,7 +129,7 @@ def run_tribus(input_df, logic, depth=1, normalization=None):
 
     if valid_input and valid_logic and valid_depth:
         tree = utils.build_tree(logic, depth)
-        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=None)
+        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=normalization)
     else:
         # TODO raise error
         print('invalid data: check logs.')

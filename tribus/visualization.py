@@ -10,6 +10,7 @@ import math
 import matplotlib.backends.backend_pdf
 from matplotlib.patches import Patch
 import colorcet as cc
+from sklearn import preprocessing
 
 palette = sns.dark_palette("#FF0000", as_cmap=True)
 matplotlib.cm.register_cmap("mycolormap", palette)
@@ -63,6 +64,10 @@ def get_markers(cell_type_description):
     markers = list(cell_type_description.iloc[:, 0])
     return markers
 
+def log_transform(df):
+    log = preprocessing.FunctionTransformer(np.log1p).fit_transform(df.transpose())
+    res = pd.DataFrame(np.transpose(log), columns=df.columns).set_index(df.index)
+    return res
 
 def get_cell_types(labels):
     return np.unique(labels)
@@ -107,8 +112,9 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
     return df_median
 
 
-def umap_vis(sample_file, labels, markers, save = False, fname = None,  level = "Global", title = None, init='spectral',
-             random_state=0, n_neighbors=10, min_dist=0.1, metric='correlation', palette_markers='mycolormap', dpi='figure'):
+def umap_vis(sample_file, labels, markers, transform = log_transform, save = False, fname = None,  level = "Global", title = None, init='spectral',
+             random_state=0, n_neighbors=10, min_dist=0.1, metric='correlation', palette_markers='mycolormap',
+             palette_cell='tab10', dpi='figure'):
 
     if type(markers) is dict:
         markers = list(markers[level].index)
@@ -124,6 +130,7 @@ def umap_vis(sample_file, labels, markers, save = False, fname = None,  level = 
     table = sample_file_filtered.copy()
     table.loc[:, 'labels'] = filtered_labels
     markers.append('labels')
+    sample_file_filtered = transform(sample_file_filtered)
 
     proj_2d = pd.DataFrame(
         data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
