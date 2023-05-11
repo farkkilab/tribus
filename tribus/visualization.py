@@ -34,7 +34,7 @@ def correlation_matrix(table, markers, labels=None, level="Global", save=False, 
         title, fontweight="bold", y=0.99)
 
     if save:
-        plt.save(fname, dpi=dpi)
+        plt.savefig(fname, dpi=dpi)
     else:
         plt.show()
 
@@ -64,10 +64,12 @@ def get_markers(cell_type_description):
     markers = list(cell_type_description.iloc[:, 0])
     return markers
 
+
 def log_transform(df):
     log = preprocessing.FunctionTransformer(np.log1p).fit_transform(df.transpose())
     res = pd.DataFrame(np.transpose(log), columns=df.columns).set_index(df.index)
     return res
+
 
 def get_cell_types(labels):
     return np.unique(labels)
@@ -77,7 +79,6 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
                                   dpi='figure', transform=z_score, title="",
                                   c_palette=sns.color_palette(['lightsteelblue', 'ivory', 'indianred'], 3),
                                   cmap_='vlag', dendrogram_ratio_=0.1):
-
     df_median = pd.DataFrame()
     df_annotation_table = pd.DataFrame()
     markers = list(logic[level].index)
@@ -89,13 +90,12 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
     table, cell_types = get_subsets(filtered_sample, filtered_labels)
 
     for i in range(len(cell_types)):
-        df_median[cell_types[i]] = table[i].iloc[:,:-1].median()
+        df_median[cell_types[i]] = table[i].iloc[:, :-1].median()
         new_value = description_table[cell_types[i]]
         palette_ = c_palette
         lut = dict(zip(values, palette_))
         row_colors = new_value.map(lut)
         df_annotation_table[cell_types[i]] = list(row_colors)
-
 
     df_annotation_table = df_annotation_table.set_index(df_median.index)
     df_median = transform(df_median.transpose())
@@ -106,16 +106,16 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
                loc='upper right')
 
     if save:
-        plt.save(fname, dpi = dpi)
+        plt.savefig(fname, dpi=dpi)
     else:
         plt.show()
     return df_median
 
 
-def umap_vis(sample_file, labels, markers, transform = log_transform, save = False, fname = None,  level = "Global", title = None, init='spectral',
+def umap_vis(sample_file, labels, markers, transform=log_transform, save=False, fname=None, level="Global", title=None,
+             init='spectral',
              random_state=0, n_neighbors=10, min_dist=0.1, metric='correlation', palette_markers='mycolormap',
              palette_cell='tab10', dpi='figure'):
-
     if type(markers) is dict:
         markers = list(markers[level].index)
 
@@ -134,13 +134,14 @@ def umap_vis(sample_file, labels, markers, transform = log_transform, save = Fal
 
     proj_2d = pd.DataFrame(
         data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
-                  min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered), columns=["component 1", "component 2"])
+                  min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered),
+        columns=["component 1", "component 2"])
     rows = math.ceil(len(markers) / 3)
     fig, ax = plt.subplots(rows, 3, figsize=(25, 30))
     fig.suptitle(title, fontsize=30)
 
     for i in range(len(markers)):
-        print(markers[i])
+        #print(markers[i])
         if markers[i] == 'labels':
             nr_of_colors = len(cell_types)
             palette = sns.color_palette(cc.glasbey, n_colors=nr_of_colors)
@@ -155,4 +156,3 @@ def umap_vis(sample_file, labels, markers, transform = log_transform, save = Fal
         plt.savefig(fname, dpi=dpi)
     else:
         plt.show()
-

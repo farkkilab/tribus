@@ -3,8 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn_som.som import SOM
 import math
-from visualization import umap_vis, correlation_matrix, heatmap_for_median_expression
 from . import visualization
+
 
 ## Constants
 MAX_PERCENTILE = 99
@@ -259,14 +259,15 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
             prob_table = prob_table.join(prob)
 
         if output is not None:
-            a = True
-            #correlation_matrix(data_subset, markers=list(logic[node].index), level=node, save=True, fname=f'{output}/correlation_{node}')
-            # correlation_matrix(data_subset, list(logic[node].index), save = True, fname = )
+            print("visualize", node)
+            visualization.correlation_matrix(data_subset, markers=list(logic[node].index), level=node, save=True, fname=f'{output}/correlation_{node}')
+            visualization.heatmap_for_median_expression(data_subset, result_table, logic, level=node, save=True, fname=f'{output}/heatmap_{node}')
+            visualization.umap_vis(data_subset, result_table, markers=list(logic[node].index), save=True, fname=f'{output}/umap_{node}',  level=node)
 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
             result_table, prob_table = traverse(tree, sample_data, logic, max_depth, current_depth+1, j, i, result_table,
-                                                prob_table, previous_labels)
+                                                prob_table, previous_labels, output=output, normalization=normalization)
     return result_table, prob_table
 
 

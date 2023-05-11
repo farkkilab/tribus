@@ -193,9 +193,9 @@ def run_classify(input_files, logic, output_folder, depth, output, tree, save_fi
         start = time.time()
         if save_figures:
             result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree,
-                                                     output=output)
+                                                     output=output_folder, normalization=normalization)
         else:
-            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=output_folder, normalization=normalization)
+            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=None, normalization=normalization)
         end = time.time()
         print((end - start)/60, "minutes")
 
