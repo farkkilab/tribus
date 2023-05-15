@@ -10,6 +10,8 @@ import umap.umap_ as umap
 import math
 import matplotlib.backends.backend_pdf
 from matplotlib.patches import Patch
+import colorcet as cc
+from sklearn import preprocessing
 
 palette = sns.dark_palette("#FF0000", as_cmap=True)
 matplotlib.cm.register_cmap("mycolormap", palette)
@@ -33,7 +35,7 @@ def correlation_matrix(table, markers, labels=None, level="Global", save=False, 
         title, fontweight="bold", y=0.99)
 
     if save:
-        plt.save(fname, dpi=dpi)
+        plt.savefig(fname, dpi=dpi)
     else:
         plt.show()
 
@@ -64,6 +66,12 @@ def get_markers(cell_type_description):
     return markers
 
 
+def log_transform(df):
+    log = preprocessing.FunctionTransformer(np.log1p).fit_transform(df.transpose())
+    res = pd.DataFrame(np.transpose(log), columns=df.columns).set_index(df.index)
+    return res
+
+
 def get_cell_types(labels):
     return np.unique(labels)
 
@@ -72,7 +80,6 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
                                   dpi='figure', transform=z_score, title="",
                                   c_palette=sns.color_palette(['lightsteelblue', 'ivory', 'indianred'], 3),
                                   cmap_='vlag', dendrogram_ratio_=0.1):
-
     df_median = pd.DataFrame()
     df_annotation_table = pd.DataFrame()
     markers = list(logic[level].index)
@@ -80,14 +87,14 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
     filtered_sample = filtered_sample[labels[level].notnull()]
     filtered_labels = labels[level][labels[level].notnull()]
     description_table = logic[level]
-
+    values = [-1, 0, 1]
     table, cell_types = get_subsets(filtered_sample, filtered_labels)
 
     for i in range(len(cell_types)):
-        df_median[cell_types[i]] = table[i].iloc[:,:-1].median()
+        df_median[cell_types[i]] = table[i].iloc[:, :-1].median()
         new_value = description_table[cell_types[i]]
         palette_ = c_palette
-        lut = dict(zip(np.unique(new_value), palette_))
+        lut = dict(zip(values, palette_))
         row_colors = new_value.map(lut)
         df_annotation_table[cell_types[i]] = list(row_colors)
 
@@ -100,16 +107,16 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
                loc='upper right')
 
     if save:
-        plt.save(fname, dpi = dpi)
+        plt.savefig(fname, dpi=dpi)
     else:
         plt.show()
     return df_median
 
 
-def umap_vis(sample_file, labels, markers, save=False, fname=None,  level="Global", title=None, init='spectral',
+def umap_vis(sample_file, labels, markers, transform=log_transform, save=False, fname=None, level="Global", title=None,
+             init='spectral',
              random_state=0, n_neighbors=10, min_dist=0.1, metric='correlation', palette_markers='mycolormap',
              palette_cell='tab10', dpi='figure'):
-
     if type(markers) is dict:
         markers = list(markers[level].index)
 
@@ -119,33 +126,34 @@ def umap_vis(sample_file, labels, markers, save=False, fname=None,  level="Globa
     filtered_labels = labels[level][labels[level].notnull()]
     sample_file_filtered = sample_file[labels[level].notnull()]
 
-
     sample_file_filtered = sample_file_filtered[markers]
     cell_types = np.unique(filtered_labels)
     table = sample_file_filtered.copy()
     table.loc[:, 'labels'] = filtered_labels
     markers.append('labels')
+    sample_file_filtered = transform(sample_file_filtered)
 
     proj_2d = pd.DataFrame(
         data=umap.UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
-                  min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered), columns=["component 1", "component 2"])
+                  min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered),
+        columns=["component 1", "component 2"])
     rows = math.ceil(len(markers) / 3)
     fig, ax = plt.subplots(rows, 3, figsize=(25, 30))
     fig.suptitle(title, fontsize=30)
 
     for i in range(len(markers)):
+        #print(markers[i])
         if markers[i] == 'labels':
             nr_of_colors = len(cell_types)
-            palette_ = sns.color_palette(palette_cell, nr_of_colors)
+            palette = sns.color_palette(cc.glasbey, n_colors=nr_of_colors)
             proj_2d[markers[i]] = table[markers[i]]
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
-                            hue=markers[i], s=1, palette=palette_)
+                            hue=markers[i], s=1, palette=palette)
         else:
             proj_2d[markers[i]] = table[markers[i]]
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
                             hue=markers[i], s=1, palette=palette_markers)
     if save:
-        plt.save(fname, dpi=dpi)
+        plt.savefig(fname, dpi=dpi)
     else:
         plt.show()
-

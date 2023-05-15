@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 from sklearn_som.som import SOM
 import math
+from . import visualization
+
 
 ## Constants
 MAX_PERCENTILE = 99
@@ -11,10 +13,16 @@ THRESHOLD_LOW = 0.4
 THRESHOLD_CLOSE = 0.001
 
 
-def cluster_cells(sample_data, labels, level):
-    '''run self-organized map to assign cells to nodes'''
+def cluster_cells(sample_data, logic, level):
+    '''run self-organized map to assign cells to nodes
+    sample_data: dataframe
+    logic: dictionary of dataframes
+    level: string
+    returns: 2 dataframe, median expression in each node, labeled dataframe (with node ID)
+    '''
     grid_size = int(np.sqrt(np.sqrt(len(sample_data)) * 5))
-    marker_data = sample_data[labels[level].index.values].to_numpy()
+    marker_data = sample_data.to_numpy()
+
 
     som = SOM(m=grid_size, n=grid_size, dim=marker_data.shape[1])
     som.fit(marker_data)
@@ -22,7 +30,7 @@ def cluster_cells(sample_data, labels, level):
     unique, counts = np.unique(predictions, return_counts=True)
 
     # For each node calculate median expression of each gating marker
-    labeled = sample_data[labels[level].index.values].copy()
+    labeled = sample_data[logic[level].index.values].copy()
     labeled['label'] = predictions
     data_to_score = labeled.groupby('label').median()  # for all cells the median marker level of each cluster
     return data_to_score, labeled
@@ -84,6 +92,9 @@ def normalize_scores(x):
 
 
 def get_cell_type(x, level):
+    '''
+    assigning cell type based on the score, write "other" if highest score is too low, write "undifined" if the two highest score are too close to eachother
+    '''
     sorted_ = np.sort(x)
     highest = sorted_[-1]
     second_highest = sorted_[-2]
@@ -95,20 +106,30 @@ def get_cell_type(x, level):
 
 
 def get_probabilities(x):
+    '''
+    assigning the highest probability to each cell
+    '''
     return np.max(x)
 
 
-def score_nodes(data_to_score, labels, level):
+def score_nodes(data_to_score, logic, level):
     """
     scoring function for the clusters, which cluster belong to which cell-type
+    data_to_score: dataframe
+    logic: dictionary of dataframes
+    level: string
+    returns: dataframe
     """
-    level_logic_df = labels[level]
-    scores_matrix = np.zeros((data_to_score.shape[0], labels[level].shape[1]))
-    for idx, cell_type in enumerate(labels[level].columns.values):
+    level_logic_df = logic[level]
+    scores_matrix = np.zeros((data_to_score.shape[0], logic[level].shape[1]))
+    for idx, cell_type in enumerate(logic[level].columns.values):
         list_negative = list(
             level_logic_df.loc[level_logic_df[cell_type] == -1].index)  # get markers with negative scores
         list_positive = list(
             level_logic_df.loc[level_logic_df[cell_type] == 1].index)  # get markers with positive scores
+
+        if list_positive == 0:
+            continue
 
         gating_positive = data_to_score[list_positive].to_numpy()  # rows: clusters, columns: positive markers
         marker_scores_positive = np.apply_along_axis(score_marker_pos, 0, gating_positive)
@@ -123,27 +144,43 @@ def score_nodes(data_to_score, labels, level):
 
         normalized_marker_scores = np.apply_along_axis(normalize_scores, 0, marker_scores)
         scores_matrix[:, idx] = np.mean(normalized_marker_scores, 1) # put the mean of the marker values of a celltype into a matrix (indexed by the celltypes)
-    scores_pd = pd.DataFrame(scores_matrix, columns=labels[level].columns.values, index=data_to_score.index)
+    scores_pd = pd.DataFrame(scores_matrix, columns=logic[level].columns.values, index=data_to_score.index)
     return scores_pd
 
 
-def subset(sample_data, current_level, previous_level, previous_labels):
+def subset(sample_data, current_level, previous_level, previous_labels, logic):
+    '''
+    do the busetting of the sample data, based on the previous results
+    sample_data: dataframe
+    current_level: string
+    previous_level: string
+    previous_labels: dataframe
+    returns: subsetted dataframe
+    '''
+    marker_data = sample_data[logic[current_level].index.values]
     if previous_labels.empty:
-        return sample_data
+        return marker_data
     labels_tumor = previous_labels.loc[previous_labels[previous_level] == current_level]
     indeces = list(labels_tumor.index)
-    new_data = sample_data.loc[indeces, :]
+    new_data = marker_data.loc[indeces, :]
     return new_data
 
 
-def clustering(sample_data, labels, level):
+def clustering(sample_data, logic, level):
+    '''
+    assignig the labels to each cell, either sell by cell or first doing the clustering and then node by node
+    sample_data: dataframe
+    logic: dataframe
+    level: string
+    returns: 2 dataframe with labels and the probabilities
+    '''
     print(level)
 
     if len(sample_data) < REQUIRED_CELLS_FOR_CLUSTERING:
         print("less than min sample_size")
         # This will score each cell without need for clustering, the constant should be changed after testing for single cell clustering
         data_to_score = sample_data
-        scores_pd = score_nodes(data_to_score, labels, level)
+        scores_pd = score_nodes(data_to_score, logic, level)
         scores_labels = pd.DataFrame()
         scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level), axis=1)
         scores_labels['probability'] = scores_pd.apply(get_probabilities, axis=1)
@@ -158,8 +195,8 @@ def clustering(sample_data, labels, level):
     else: # if enough cells, do clustering
 
         # get a table, rows are the clusters and columns are the cell-types, having the scoring, highest the more probable
-        data_to_score, labeled = cluster_cells(sample_data, labels, level)
-        scores_pd = score_nodes(data_to_score, labels, level)
+        data_to_score, labeled = cluster_cells(sample_data, logic, level)
+        scores_pd = score_nodes(data_to_score, logic, level)
         # assign highest scored label
         scores_labels = pd.DataFrame()
         scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level), axis=1)
@@ -172,28 +209,46 @@ def clustering(sample_data, labels, level):
         prob_df = prob_df.set_index(labeled.index)
 
 
-    # TODO: Write "Other" if highest score is too low
     labels_df = labels_df.rename(columns={'cell_label': level})
     prob_df = prob_df.rename(columns={'probability': level})
     return labels_df, prob_df
 
 
-def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, result_table, prob_table,
-             previous_labels):
-    if depth < max_depth:
+def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_level, result_table, prob_table,
+             previous_labels, output=None, normalization=None):
+    '''
+    travering the lineage tree and run the analysis on each level (node) and do visualization if required
+    tree: networkx digraph
+    depth: integer
+    sample_data: dataframe
+    labels: dataframe
+    logic: dictionary of dataframes
+    max_depth: integer
+    node: string (level)
+    previous_level: string
+    result_table: dataframe
+    result_table: dataframe (to store the results)
+    prob_table: dataframe (to store the probability values for ech cell)
+    previous_labels: dataframe (if we can use the results from a previous run)
+    output: string (path to save the figures)
+    returns: 2 dataframe with results and probabilities
+    '''
+    if current_depth < max_depth:
         # check whether there is previously available data, so not necessary to rerun some parts of tribus
         if node in previous_labels.columns:
             print(f'{node} in previous lables')
             result = previous_labels[node]
             result = pd.DataFrame(result, columns=[node])
         else:
-            data_subset = subset(sample_data, node, previous_level, result_table)
+            data_subset = subset(sample_data, node, previous_level, result_table, logic)
             print(f'{node}, subsetting done')
+            if normalization is not None:
+                data_subset = normalization(data_subset)
 
             # only using the markers which are containing different values than zeros
-            filtered_markers = list(labels[node].loc[(labels[node] != 0).any(axis=1)].index)
-            labels[node] = labels[node].loc[filtered_markers]
-            result, prob = clustering(data_subset, labels, node)
+            filtered_markers = list(logic[node].loc[(logic[node] != 0).any(axis=1)].index)
+            logic[node] = logic[node].loc[filtered_markers]
+            result, prob = clustering(data_subset, logic, node)
             print(f'{node}, clustering done')
 
         if result_table.empty:
@@ -203,10 +258,16 @@ def traverse(tree, depth, sample_data, labels, max_depth, node, previous_level, 
             result_table = result_table.join(result)
             prob_table = prob_table.join(prob)
 
+        if output is not None:
+            print("visualize", node)
+            visualization.correlation_matrix(data_subset, markers=list(logic[node].index), level=node, save=True, fname=f'{output}/correlation_{node}')
+            visualization.heatmap_for_median_expression(data_subset, result_table, logic, level=node, save=True, fname=f'{output}/heatmap_{node}')
+            visualization.umap_vis(data_subset, result_table, markers=list(logic[node].index), save=True, fname=f'{output}/umap_{node}',  level=node)
+
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
-            result_table, prob_table = traverse(tree, depth + 1, sample_data, labels, max_depth, j, i, result_table,
-                                                prob_table, previous_labels)
+            result_table, prob_table = traverse(tree, sample_data, logic, max_depth, current_depth+1, j, i, result_table,
+                                                prob_table, previous_labels, output=output, normalization=normalization)
     return result_table, prob_table
 
 
@@ -232,17 +293,23 @@ def get_final_cells(table):
     return new_column
 
 
-def run(sample_data, labels, depth, previous_labels, tree):
+def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None):
     """
-    # create an output folder for intermediate results
-    scores_folder = os.path.join(output_folder, 'celltype_scores')
-    Path(scores_folder).mkdir(parents=True, exist_ok=True)
+    tribus main function, running the actual analysis by traversing the lineage tree
+    sample_data: dataframe (one sample)
+    labels: dictionary (logic)
+    depth: integer
+    previous_labels: dataframe
+    tree: networkx digraph
+    output: string (data path)
+
+    returns: 2 dataframe, labels and probabilities
     """
 
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
-    result_table, prob_table = traverse(tree, 0, sample_data, labels, depth, "Global", pd.DataFrame(), result_table,
-                                        prob_table, previous_labels)
+    result_table, prob_table = traverse(tree, sample_data, logic, depth, 0, "Global", pd.DataFrame(), result_table,
+                                        prob_table, previous_labels, output, normalization=normalization)
 
     final_cell_type = get_final_cells(result_table)
     final_prob = get_final_prob(prob_table)
