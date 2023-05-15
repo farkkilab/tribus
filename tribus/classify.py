@@ -8,7 +8,7 @@ import math
 MAX_PERCENTILE = 99
 REQUIRED_CELLS_FOR_CLUSTERING = 50000 # tuneable
 THRESHOLD_LOW = 0.4
-THRESHOLD_CLOSE = 0.01
+THRESHOLD_CLOSE = 0.001
 
 
 def cluster_cells(sample_data, labels, level):
