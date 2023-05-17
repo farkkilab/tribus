@@ -23,6 +23,7 @@ import os, sys, datetime, shutil
 import argparse
 from pathlib import Path
 import pandas as pd
+import time
 import pkg_resources
 from . import utils
 from . import classify
@@ -127,12 +128,15 @@ def run_tribus(input_df, logic, depth=1, normalization=None):
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
 
+    start = time.time()
     if valid_input and valid_logic and valid_depth:
         tree = utils.build_tree(logic, depth)
         result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=normalization)
     else:
         # TODO raise error
         print('invalid data: check logs.')
+    end = time.time()
+    print((end - start) / 60, "minutes")
 
     return result_table, prob_table
 
