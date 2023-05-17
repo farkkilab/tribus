@@ -2,10 +2,9 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import scipy.stats as stats
-from sklearn.manifold import TSNE
 import matplotlib.pyplot as plt
-import matplotlib
 from umap import UMAP
+import sys
 import math
 import matplotlib.backends.backend_pdf
 from matplotlib.patches import Patch
@@ -87,10 +86,10 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
     filtered_labels = labels[level][labels[level].notnull()]
     description_table = logic[level]
     values = [-1, 0, 1]
-    table, cell_types = get_subsets(filtered_sample, filtered_labels)
+    tables, cell_types = get_subsets(filtered_sample, filtered_labels)
 
     for i in range(len(cell_types)):
-        df_median[cell_types[i]] = table[i].iloc[:, :-1].median()
+        df_median[cell_types[i]] = tables[i].iloc[:, :-1].median()
         new_value = description_table[cell_types[i]]
         palette_ = c_palette
         lut = dict(zip(values, palette_))
@@ -98,6 +97,7 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
         df_annotation_table[cell_types[i]] = list(row_colors)
 
     df_annotation_table = df_annotation_table.set_index(df_median.index)
+    print(df_median)
     df_median = transform(df_median.transpose())
     sns.clustermap(df_median, figsize=(10, 8), cmap=cmap_, col_colors=df_annotation_table,
                    dendrogram_ratio=dendrogram_ratio_, colors_ratio=0.02).fig.suptitle(title, fontweight="bold", y=1.01)
@@ -112,7 +112,7 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
     return df_median
 
 
-def umap_vis(sample_file, labels, markers, transform=log_transform, save=False, fname=None, level="Global", title=None,
+def umap_vis(sample_file, labels, markers, save=False, fname=None, level="Global", title=None,
              init='spectral',
              random_state=0, n_neighbors=10, min_dist=0.1, metric='correlation', palette_markers='mycolormap',
              palette_cell='tab10', dpi='figure'):
@@ -125,12 +125,12 @@ def umap_vis(sample_file, labels, markers, transform=log_transform, save=False, 
     filtered_labels = labels[level][labels[level].notnull()]
     sample_file_filtered = sample_file[labels[level].notnull()]
 
+
     sample_file_filtered = sample_file_filtered[markers]
     cell_types = np.unique(filtered_labels)
     table = sample_file_filtered.copy()
     table.loc[:, 'labels'] = filtered_labels
     markers.append('labels')
-    sample_file_filtered = transform(sample_file_filtered)
 
     proj_2d = pd.DataFrame(
         data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
@@ -152,6 +152,78 @@ def umap_vis(sample_file, labels, markers, transform=log_transform, save=False, 
             proj_2d[markers[i]] = table[markers[i]]
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
                             hue=markers[i], palette=palette_markers)
+    if save:
+        plt.savefig(fname, dpi=dpi)
+    else:
+        plt.show()
+
+
+def marker_expression(sample_data, markers=None, save=False, fname=None, dpi='figure', log=False):
+    if markers is None:
+        markers = sample_data.columns.values
+
+    fig, axs = plt.subplots(math.ceil(len(markers) / 6), 6, figsize=(30, 20))
+    fig.suptitle("Marker expression level", fontsize=30)
+    if log:
+        for i in range(len(markers)):
+            ax = axs[i//6, i%6]
+            plt.sca(ax)
+            hist, edges = np.histogram(sample_data[markers[i]], bins=50)
+            plt.stairs(np.log(hist)+ sys.float_info.epsilon, edges, label="{}".format(markers[i]))
+            plt.title(f"{markers[i]}")
+            plt.grid()
+            plt.tight_layout()
+    else:
+        for i in range(len(markers)):
+            ax = axs[i//6, i%6]
+            plt.sca(ax)
+            hist, edges = np.histogram(sample_data[markers[i]], bins=50)
+            plt.stairs(hist, edges, label="{}".format(markers[i]))
+            plt.title(f"{markers[i]}")
+            plt.grid()
+            plt.tight_layout()
+    if save:
+        plt.savefig(fname, dpi=dpi)
+    else:
+        plt.show()
+
+
+def marker_expression_by_cell_type(sample_data, labels, cell_types=None, markers=None, level="Global", save=False, fname=None, dpi='figure', log=False):
+    if markers is None:
+        markers = sample_data.columns.values
+
+    sample_data_labeled = sample_data.copy()
+    sample_data_labeled["label"] = labels[level]
+    if cell_types is None:
+        cell_types = np.unique(sample_data_labeled["label"])
+
+    fig, axs = plt.subplots(math.ceil(len(markers) / 6), 6, figsize=(30, 20))
+    fig.suptitle("Marker expression level per cell type", fontsize=30)
+
+    if log:
+        for i in range(len(markers)):
+            ax = axs[i//6, i%6]
+            plt.sca(ax)
+            for uc in cell_types:
+                subset = sample_data_labeled.loc[sample_data_labeled["label"]==uc]
+                hist, edges = np.histogram(subset[markers[i]], bins=50)
+                plt.stairs(np.log(hist)+sys.float_info.epsilon, edges, label="{}".format(uc))
+                plt.legend(loc='upper right')
+            plt.title(f"{markers[i]}")
+            plt.grid()
+            plt.tight_layout()
+    else:
+        for i in range(len(markers)):
+            ax = axs[i//6, i%6]
+            plt.sca(ax)
+            for uc in cell_types:
+                subset = sample_data_labeled.loc[sample_data_labeled["label"]==uc]
+                hist, edges = np.histogram(subset[markers[i]], bins=50)
+                plt.stairs(hist, edges, label="{}".format(uc))
+                plt.legend(loc='upper right')
+            plt.title(f"{markers[i]}")
+            plt.grid()
+            plt.tight_layout()
     if save:
         plt.savefig(fname, dpi=dpi)
     else:
