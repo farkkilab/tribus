@@ -174,7 +174,6 @@ def clustering(sample_data, logic, level):
     level: string
     returns: 2 dataframe with labels and the probabilities
     '''
-    print(level)
 
     if len(sample_data) < REQUIRED_CELLS_FOR_CLUSTERING:
         print("less than min sample_size")
@@ -249,7 +248,6 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
             filtered_markers = list(logic[node].loc[(logic[node] != 0).any(axis=1)].index)
             logic[node] = logic[node].loc[filtered_markers]
             result, prob = clustering(data_subset, logic, node)
-            print(f'{node}, clustering done')
 
         if result_table.empty:
             result_table = result
@@ -257,12 +255,11 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
         else:
             result_table = result_table.join(result)
             prob_table = prob_table.join(prob)
-
         if output is not None:
-            print("visualize", node)
             visualization.correlation_matrix(data_subset, markers=list(logic[node].index), level=node, save=True, fname=f'{output}/correlation_{node}')
             visualization.heatmap_for_median_expression(data_subset, result_table, logic, level=node, save=True, fname=f'{output}/heatmap_{node}')
             visualization.umap_vis(data_subset, result_table, markers=list(logic[node].index), save=True, fname=f'{output}/umap_{node}',  level=node)
+            print("Figures done")
 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
