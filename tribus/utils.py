@@ -185,6 +185,7 @@ def run_classify(input_files, logic, output_folder, depth, output, tree, save_fi
     it will automatically save the results into the output folder
     '''
     for file in input_files:
+        file_name = file.split(".")[0]
         if depth < 0:
             previous_labels = re_entry(output, logic, depth, file, tree, output_folder)
         else:
@@ -193,9 +194,10 @@ def run_classify(input_files, logic, output_folder, depth, output, tree, save_fi
         start = time.time()
         if save_figures:
             result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree,
-                                                     output=output_folder, normalization=normalization)
+                                                     output=output_folder, normalization=normalization, sample_name=file_name)
         else:
-            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree, output=None, normalization=normalization)
+            result_labels, prob_table = classify.run(input_files[file], logic, depth, previous_labels, tree,
+                                                     output=None, normalization=normalization)
         end = time.time()
         print((end - start)/60, "minutes")
 

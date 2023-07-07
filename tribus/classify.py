@@ -8,9 +8,9 @@ from . import visualization
 
 ## Constants
 MAX_PERCENTILE = 99
-REQUIRED_CELLS_FOR_CLUSTERING = 50_000
+REQUIRED_CELLS_FOR_CLUSTERING = 15_000
 THRESHOLD_LOW = 0.4
-THRESHOLD_CLOSE = 0.0
+THRESHOLD_CLOSE = 0.001
 
 
 def cluster_cells(sample_data, logic, level):
@@ -74,7 +74,6 @@ def score_marker_neg(x):
     substrach the minimum from each value --> take the squared
     large values remain large, small values became smaller
     """
-
     res = [(i - np.min(x)) ** 2 for i in x]
     return res
 
@@ -192,7 +191,6 @@ def clustering(sample_data, logic, level):
 
 
     else: # if enough cells, do clustering
-
         # get a table, rows are the clusters and columns are the cell-types, having the scoring, highest the more probable
         data_to_score, labeled = cluster_cells(sample_data, logic, level)
         scores_pd = score_nodes(data_to_score, logic, level)
@@ -214,7 +212,7 @@ def clustering(sample_data, logic, level):
 
 
 def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_level, result_table, prob_table,
-             previous_labels, output=None, normalization=None):
+             previous_labels, output=None, normalization=None, sample_name=None):
     '''
     travering the lineage tree and run the analysis on each level (node) and do visualization if required
     tree: networkx digraph
@@ -256,15 +254,33 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
             result_table = result_table.join(result)
             prob_table = prob_table.join(prob)
         if output is not None:
-            visualization.correlation_matrix(data_subset, markers=list(logic[node].index), level=node, save=True, fname=f'{output}/correlation_{node}')
-            visualization.heatmap_for_median_expression(data_subset, result_table, logic, level=node, save=True, fname=f'{output}/heatmap_{node}')
-            visualization.umap_vis(data_subset, result_table, markers=list(logic[node].index), save=True, fname=f'{output}/umap_{node}',  level=node)
+            markers = []
+            for key in logic:
+                markers_ = list(logic[key].index)
+                markers = markers + markers_
+            markers = list(np.unique(markers))
+            sample_data[markers]
+
+            visualization.correlation_matrix(data_subset, markers=list(logic[node].index), level=node, save=True,
+                                             fname=f'{output}/{sample_name}_correlation_{node}')
+
+            visualization.heatmap_for_median_expression(data_subset, result_table, logic, level=node, save=True,
+                                                        fname=f'{output}/{sample_name}_heatmap_{node}')
+
+            visualization.umap_vis(data_subset, result_table, markers=markers, save=True
+                                   , fname=f'{output}/{sample_name}_umap_{node}', level=node)
+
+            visualization.marker_expression_by_cell_type(data_subset, result_table, markers=list(logic[node].index),
+                                                         level=node, save=True, fname=f'{output}/{sample_name}_marker_expression_{node}.png')
+
+            visualization.cell_type_distribution(result_table, level=node, save=True, fname=f'{output}/{sample_name}_barplot_{node}.png')
             print("Figures done")
 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
             result_table, prob_table = traverse(tree, sample_data, logic, max_depth, current_depth+1, j, i, result_table,
-                                                prob_table, previous_labels, output=output, normalization=normalization)
+                                                prob_table, previous_labels, output=output, normalization=normalization,
+                                                sample_name=sample_name)
     return result_table, prob_table
 
 
@@ -290,7 +306,7 @@ def get_final_cells(table):
     return new_column
 
 
-def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None):
+def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None, sample_name=None):
     """
     tribus main function, running the actual analysis by traversing the lineage tree
     sample_data: dataframe (one sample)
@@ -305,8 +321,18 @@ def run(sample_data, logic, depth, previous_labels, tree, output=None, normaliza
 
     result_table = pd.DataFrame()
     prob_table = pd.DataFrame()
+
+    if output is not None:
+        markers = []
+        for key in logic:
+            markers_ = list(logic[key].index)
+            markers = markers + markers_
+        markers = np.unique(markers)
+        sample_data[markers]
+        visualization.marker_expression(sample_data[markers], save=True, fname=f'{output}/{sample_name}_markerexpression.png')
+
     result_table, prob_table = traverse(tree, sample_data, logic, depth, 0, "Global", pd.DataFrame(), result_table,
-                                        prob_table, previous_labels, output, normalization=normalization)
+                                        prob_table, previous_labels, output, normalization=normalization, sample_name=sample_name)
 
     final_cell_type = get_final_cells(result_table)
     final_prob = get_final_prob(prob_table)
