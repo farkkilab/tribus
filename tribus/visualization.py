@@ -30,6 +30,7 @@ def correlation_matrix(table, markers, save=False, fname=None, dpi="figure", fig
 
     if save:
         plt.savefig(fname, dpi=dpi)
+        plt.clf()
     else:
         plt.show()
 
@@ -102,6 +103,7 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
 
     if save:
         plt.savefig(fname, dpi=dpi)
+        plt.clf()
     else:
         plt.show()
     return df_median
@@ -160,6 +162,7 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
                             hue=markers[i], palette=palette_markers, s=point_size)
     if save:
         plt.savefig(fname, dpi=dpi)
+        plt.clf()
     else:
         plt.show()
 
@@ -190,6 +193,7 @@ def marker_expression(sample_data, markers=None, save=False, fname=None, dpi='fi
             plt.tight_layout()
     if save:
         plt.savefig(fname, dpi=dpi)
+        plt.clf()
     else:
         plt.show()
 
@@ -232,6 +236,7 @@ def marker_expression_by_cell_type(sample_data, labels, cell_types=None, markers
             plt.tight_layout()
     if save:
         fig.savefig(fname)
+        plt.clf()
     else:
         plt.show()
 
@@ -241,5 +246,13 @@ def cell_type_distribution(labels, level="Global", save=False, fname=None, dpi="
     plt.bar(cell_types, counts)
     if save:
         plt.savefig(fname)
+        plt.clf()
     else:
         plt.show()
+
+
+def log_zscore_normalization(df):
+    df_ = df.copy()
+    log_data = np.log(df_ + 1)
+    z_score_data = log_data.apply(stats.zscore)
+    return(z_score_data)
