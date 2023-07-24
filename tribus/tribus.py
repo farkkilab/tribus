@@ -22,8 +22,13 @@ Tribus provides an interface to optimize the steps of a complete cell type calli
 import os, sys, datetime, shutil
 import argparse
 from pathlib import Path
+import pandas as pd
+import time
 import pkg_resources
-from . import utils
+from tribus import utils
+from tribus import classify
+import xlsxwriter
+
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog='tribus', description='Execute tribus options on single cell data tables')
@@ -59,19 +64,8 @@ def main(argv=None):
     
     if args.command == 'classify':
         if os.path.isfile(args.logic) and os.path.isdir(args.input):
-            valid, logic = utils.validateInputs(args.input, args.logic)
-            if valid:
-                # create output dir if not present, and create a subfolder with current time stamp
-                output_folder = os.path.join(args.output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
-                # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
-                Path(output_folder).mkdir(parents=True, exist_ok=True)
-                print(output_folder)
-                # store the logic file in this folder, so the user can always go back to see which logic created those results
-                shutil.copy(args.logic, output_folder + os.sep + 'expected_phenotypes' + '.xlsx')
-                # This call does everything
-                utils.runClassify(args.input, logic, output_folder, args.depth)
-            else:
-                print('invalid data: check logs.')
+            run_tribus_from_file(args.input, args.output, args.logic, args.depth)
+            # store the logic file in this folder, so the user can always go back to see which logic created those results
         else:
             print('input paths are not a directory and a file.')
     elif args.command == 'preview':
@@ -81,5 +75,69 @@ def main(argv=None):
     else:
         parser.print_help()
 
+
+def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=False, normalization=None):
+    '''Running tribus on multiple samples
+    input_path: string (path for the folder, which contains the sample files)
+    output: string (path, where tribus will generate the output folder (named with timestamp) containing the results)
+    logic_path: string (path for the logic file)
+    depth: integer (how many levels should tribus run the analysis)
+    save_figures: bool
+    it will automatically save the results into the output folder
+    '''
+
+    valid_depth = True
+    # check if input parameters are suitable
+    if depth < 0:
+        valid_depth = depth >= 0
+        print("Depth should be positive or zero")
+
+    logic = utils.read_logic(logic_path)
+    input_files = utils.read_input_files(input_path)
+    valid = utils.validate_inputs(input_files, logic)
+
+    if valid and valid_depth:
+        tree = utils.build_tree(logic, depth)
+        # create output dir if not present, and create a subfolder with current time stamp
+        output_folder = os.path.join(output, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M'))
+        # Instruct the user to NOT EDIT ANY CONTENTS OF THE RESULT FOLDERS
+        Path(output_folder).mkdir(parents=True, exist_ok=True)
+
+        #save the logic table, so the user will know what logic was used for which results
+        writer = pd.ExcelWriter(f"{output_folder}/expected_phenotypes.xlsx", engine='xlsxwriter')
+        for key in logic:
+            logic[key].to_excel(writer, sheet_name=key)
+
+        print('print output folder', output_folder)
+
+        # This call does everything
+        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=normalization)
+    else:
+        raise AssertionError('invalid data: check logs.')
+
+
+def run_tribus(input_df, logic, depth=1, normalization=None):
+    valid_depth = True
+    if depth < 0:
+        valid_depth = depth >= 0
+        print("Depth should be positive or zero")
+
+    valid_input = utils.validate_input_data(input_df, logic)
+    valid_logic = utils.validate_gate_logic(logic)
+
+    result_table = pd.DataFrame()
+    prob_table = pd.DataFrame()
+
+    start = time.time()
+    if valid_input and valid_logic and valid_depth:
+        tree = utils.build_tree(logic, depth)
+        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=normalization)
+    else:
+        # TODO raise error
+        print('invalid data: check logs.')
+    end = time.time()
+    print((end - start) / 60, "minutes")
+
+    return result_table, prob_table
 
 #EOF
