@@ -1,3 +1,4 @@
+import sys
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -111,7 +112,6 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
     else:
         plt.show()
     return df_median
-
 
 def umap_vis(sample_file, labels, markers, save=False, fname=None, level="Global", title=None,
              init='spectral',
