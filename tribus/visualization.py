@@ -137,12 +137,12 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
 
     if supervised:
         proj_2d = pd.DataFrame(
-            data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
+            data=umap.UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
                       min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered, y = y),
             columns=["component 1", "component 2"])
     else:
         proj_2d = pd.DataFrame(
-            data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
+            data=umap.UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
                       min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered),
             columns=["component 1", "component 2"])
 
