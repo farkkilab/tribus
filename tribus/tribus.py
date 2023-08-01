@@ -76,7 +76,8 @@ def main(argv=None):
         parser.print_help()
 
 
-def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=False, normalization=None):
+def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=False, normalization=None, clustering_threshold=15_000,
+                         undefined_threshold=0.01, other_threshold=0.4, random_state=None):
     '''Running tribus on multiple samples
     input_path: string (path for the folder, which contains the sample files)
     output: string (path, where tribus will generate the output folder (named with timestamp) containing the results)
@@ -111,12 +112,15 @@ def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=F
         print('print output folder', output_folder)
 
         # This call does everything
-        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=normalization)
+        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=normalization,
+                           clustering_threshold=clustering_threshold, undefined_threshold=undefined_threshold,
+                           other_threshold=other_threshold, random_state=random_state)
     else:
         raise AssertionError('invalid data: check logs.')
 
 
-def run_tribus(input_df, logic, depth=1, normalization=None):
+def run_tribus(input_df, logic, depth=1, normalization=None, clustering_threshold=15_000, undefined_threshold=0.01,
+               other_threshold=0.4, random_state=None):
     valid_depth = True
     if depth < 0:
         valid_depth = depth >= 0
@@ -131,7 +135,9 @@ def run_tribus(input_df, logic, depth=1, normalization=None):
     start = time.time()
     if valid_input and valid_logic and valid_depth:
         tree = utils.build_tree(logic, depth)
-        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=normalization)
+        result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=normalization,
+                                                clustering_threshold=clustering_threshold, undefined_threshold=undefined_threshold,
+                                                other_threshold=other_threshold, random_state=random_state)
     else:
         # TODO raise error
         print('invalid data: check logs.')
