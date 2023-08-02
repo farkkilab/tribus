@@ -8,12 +8,9 @@ from . import visualization
 
 ## Constants
 MAX_PERCENTILE = 99
-REQUIRED_CELLS_FOR_CLUSTERING = 5000
-THRESHOLD_LOW = 0.001
-THRESHOLD_CLOSE = 0.001
 
 
-def cluster_cells(sample_data, logic, level):
+def cluster_cells(sample_data, logic, level, random_state):
     '''run self-organized map to assign cells to nodes
     sample_data: dataframe
     logic: dictionary of dataframes
@@ -24,7 +21,7 @@ def cluster_cells(sample_data, logic, level):
     marker_data = sample_data.to_numpy()
 
 
-    som = SOM(m=grid_size, n=grid_size, dim=marker_data.shape[1])
+    som = SOM(m=grid_size, n=grid_size, dim=marker_data.shape[1], random_state=random_state)
     som.fit(marker_data)
     predictions = som.predict(marker_data)
     unique, counts = np.unique(predictions, return_counts=True)
@@ -90,16 +87,16 @@ def normalize_scores(x):
     return res
 
 
-def get_cell_type(x, level):
+def get_cell_type(x, level, undefined_threshold, other_threshold):
     '''
     assigning cell type based on the score, write "other" if highest score is too low, write "undifined" if the two highest score are too close to eachother
     '''
     sorted_ = np.sort(x)
     highest = sorted_[-1]
     second_highest = sorted_[-2]
-    if highest < THRESHOLD_LOW:
+    if highest < other_threshold:
         return f'other_{level}'
-    if highest-second_highest < THRESHOLD_CLOSE:
+    if highest-second_highest < undefined_threshold:
         return f'undefined_{level}'
     return x.idxmax()
 
@@ -165,7 +162,7 @@ def subset(sample_data, current_level, previous_level, previous_labels, logic):
     return new_data
 
 
-def clustering(sample_data, logic, level):
+def clustering(sample_data, logic, level, clustering_threshold, undefined_threshold, other_threshold, random_state):
     '''
     assignig the labels to each cell, either sell by cell or first doing the clustering and then node by node
     sample_data: dataframe
@@ -174,13 +171,13 @@ def clustering(sample_data, logic, level):
     returns: 2 dataframe with labels and the probabilities
     '''
 
-    if len(sample_data) < REQUIRED_CELLS_FOR_CLUSTERING:
+    if len(sample_data) < clustering_threshold:
         print("less than min sample_size")
         # This will score each cell without need for clustering, the constant should be changed after testing for single cell clustering
         data_to_score = sample_data
         scores_pd = score_nodes(data_to_score, logic, level)
         scores_labels = pd.DataFrame()
-        scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level), axis=1)
+        scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level, undefined_threshold, other_threshold), axis=1)
         scores_labels['probability'] = scores_pd.apply(get_probabilities, axis=1)
         labels_list = scores_labels.cell_label
         prob_list = scores_labels.probability
@@ -192,11 +189,11 @@ def clustering(sample_data, logic, level):
 
     else: # if enough cells, do clustering
         # get a table, rows are the clusters and columns are the cell-types, having the scoring, highest the more probable
-        data_to_score, labeled = cluster_cells(sample_data, logic, level)
+        data_to_score, labeled = cluster_cells(sample_data, logic, level, random_state)
         scores_pd = score_nodes(data_to_score, logic, level)
         # assign highest scored label
         scores_labels = pd.DataFrame()
-        scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level), axis=1)
+        scores_labels['cell_label'] = scores_pd.apply(lambda x: get_cell_type(x, level, undefined_threshold, other_threshold), axis=1)
         scores_labels['probability'] = scores_pd.apply(get_probabilities, axis=1)
         labels_list = scores_labels.loc[labeled['label']].cell_label # according to the cluster labels, assign the most probable cell-type to each cell
         prob_list = scores_labels.loc[labeled['label']].probability
@@ -212,7 +209,8 @@ def clustering(sample_data, logic, level):
 
 
 def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_level, result_table, prob_table,
-             previous_labels, output=None, normalization=None, sample_name=None):
+             previous_labels, output=None, normalization=None, sample_name=None, clustering_threshold=15_000, undefined_threshold=0.01,
+             other_threshold=0.4, random_state=None):
     '''
     travering the lineage tree and run the analysis on each level (node) and do visualization if required
     tree: networkx digraph
@@ -245,7 +243,7 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
             # only using the markers which are containing different values than zeros
             filtered_markers = list(logic[node].loc[(logic[node] != 0).any(axis=1)].index)
             logic[node] = logic[node].loc[filtered_markers]
-            result, prob = clustering(data_subset, logic, node)
+            result, prob = clustering(data_subset, logic, node, clustering_threshold, undefined_threshold, other_threshold, random_state)
 
         if result_table.empty:
             result_table = result
@@ -278,9 +276,11 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
 
         out_edges = tree.out_edges(node)
         for i, j in out_edges:
-            result_table, prob_table = traverse(tree, sample_data, logic, max_depth, current_depth+1, j, i, result_table,
+            result_table, prob_table = traverse(tree, sample_data, logic, max_depth, current_depth + 1, j, i, result_table,
                                                 prob_table, previous_labels, output=output, normalization=normalization,
-                                                sample_name=sample_name)
+                                                sample_name=sample_name, clustering_threshold=clustering_threshold,
+                                                undefined_threshold=undefined_threshold, other_threshold=other_threshold,
+                                                random_state=random_state)
     return result_table, prob_table
 
 
@@ -306,7 +306,8 @@ def get_final_cells(table):
     return new_column
 
 
-def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None, sample_name=None):
+def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None, sample_name=None,
+        clustering_threshold=15_000, undefined_threshold=0.01, other_threshold=0.4, random_state=None):
     """
     tribus main function, running the actual analysis by traversing the lineage tree
     sample_data: dataframe (one sample)
@@ -332,7 +333,9 @@ def run(sample_data, logic, depth, previous_labels, tree, output=None, normaliza
         visualization.marker_expression(sample_data[markers], save=True, fname=f'{output}/{sample_name}_markerexpression.png')
 
     result_table, prob_table = traverse(tree, sample_data, logic, depth, 0, "Global", pd.DataFrame(), result_table,
-                                        prob_table, previous_labels, output, normalization=normalization, sample_name=sample_name)
+                                        prob_table, previous_labels, output, normalization=normalization, sample_name=sample_name,
+                                        clustering_threshold=clustering_threshold, undefined_threshold=undefined_threshold,
+                                        other_threshold=other_threshold, random_state=random_state)
 
     final_cell_type = get_final_cells(result_table)
     final_prob = get_final_prob(prob_table)
