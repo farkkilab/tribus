@@ -119,15 +119,15 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
     if title is None:
         title = str(level)
 
-    filtered_labels = labels[level][labels[level].notnull()]
+    filtered_labels = list(labels[level][labels[level].notnull()])
     sample_file_filtered = sample_file[labels[level].notnull()]
 
 
     sample_file_filtered = sample_file_filtered[markers]
     cell_types = np.unique(filtered_labels)
     table = sample_file_filtered.copy()
-    table.loc[:, 'labels'] = filtered_labels
-    markers.append('labels')
+    table.loc[:, 'labels'] = list(filtered_labels)
+    markers = [*markers, 'labels']
 
 
     label_encoder = preprocessing.LabelEncoder()
@@ -136,7 +136,7 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
     if supervised:
         proj_2d = pd.DataFrame(
             data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
-                      min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered, y = y),
+                      min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered, y=y),
             columns=["component 1", "component 2"])
     else:
         proj_2d = pd.DataFrame(
@@ -153,11 +153,11 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
         if markers[i] == 'labels':
             nr_of_colors = len(cell_types)
             palette = sns.color_palette(cc.glasbey, n_colors=nr_of_colors)
-            proj_2d[markers[i]] = table[markers[i]]
+            proj_2d[markers[i]] = list(table[markers[i]])
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
                             hue=markers[i], palette=palette, s=point_size)
         else:
-            proj_2d[markers[i]] = table[markers[i]]
+            proj_2d[markers[i]] = list(table[markers[i]])
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
                             hue=markers[i], palette=palette_markers, s=point_size)
     if save:
