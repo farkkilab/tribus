@@ -11,8 +11,11 @@ from matplotlib.patches import Patch
 import colorcet as cc
 from sklearn import preprocessing
 
-palette = sns.dark_palette("#FF0000", as_cmap=True)
-matplotlib.cm.register_cmap("mycolormap", palette)
+try:
+    palette = sns.dark_palette("#FF0000", as_cmap=True)
+    matplotlib.cm.register_cmap("mycolormap", palette)
+except Exception as e:
+    pass
 
 
 def correlation_matrix(table, markers, save=False, fname=None, dpi="figure", figsize=(10, 10), cmap='vlag', title=""):

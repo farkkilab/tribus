@@ -4,8 +4,6 @@ import numpy as np
 import sys
 import glob
 import re
-import scipy.stats
-import statsmodels.stats.multitest as mt
 import json
 import umap
 from numpy.random import MT19937
