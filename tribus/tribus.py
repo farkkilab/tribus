@@ -25,8 +25,8 @@ from pathlib import Path
 import pandas as pd
 import time
 import pkg_resources
-from tribus import utils
-from tribus import classify
+import utils
+import classify
 import xlsxwriter
 
 
