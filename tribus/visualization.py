@@ -97,7 +97,7 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
 
     df_annotation_table = df_annotation_table.set_index(df_median.index)
     df_median = transform(df_median.transpose())
-    sns.clustermap(df_median.replace(np.nan,0), figsize=(7, 5), cmap=cmap_, col_colors=df_annotation_table,
+    sns.clustermap(df_median.replace(np.nan,0), figsize=(8, 6), cmap=cmap_, col_colors=df_annotation_table,
                    dendrogram_ratio=dendrogram_ratio_, colors_ratio=0.02).fig.suptitle(title, fontweight="bold", y=1.01)
     handles = [Patch(facecolor=lut[name]) for name in lut]
     plt.legend(handles, lut, title='Expected values', bbox_to_anchor=(1, 1), bbox_transform=plt.gcf().transFigure,
