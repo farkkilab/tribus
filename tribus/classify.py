@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn_som.som import SOM
 import math
-from . import visualization
+import visualization
 
 
 ## Constants

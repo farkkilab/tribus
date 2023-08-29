@@ -13,8 +13,11 @@ from matplotlib.patches import Patch
 import colorcet as cc
 from sklearn import preprocessing
 
-palette = sns.dark_palette("#FF0000", as_cmap=True)
-matplotlib.cm.register_cmap("mycolormap", palette)
+try:
+    palette = sns.dark_palette("#FF0000", as_cmap=True)
+    matplotlib.cm.register_cmap("mycolormap", palette)
+except Exception as e:
+    pass
 
 
 def correlation_matrix(table, markers, save=False, fname=None, dpi="figure", figsize=(10, 10), cmap='vlag', title=""):
@@ -121,15 +124,15 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
     if title is None:
         title = str(level)
 
-    filtered_labels = labels[level][labels[level].notnull()]
+    filtered_labels = list(labels[level][labels[level].notnull()])
     sample_file_filtered = sample_file[labels[level].notnull()]
 
 
     sample_file_filtered = sample_file_filtered[markers]
     cell_types = np.unique(filtered_labels)
     table = sample_file_filtered.copy()
-    table.loc[:, 'labels'] = filtered_labels
-    markers.append('labels')
+    table.loc[:, 'labels'] = list(filtered_labels)
+    markers = [*markers, 'labels']
 
 
     label_encoder = preprocessing.LabelEncoder()
@@ -155,11 +158,11 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
         if markers[i] == 'labels':
             nr_of_colors = len(cell_types)
             palette = sns.color_palette(cc.glasbey, n_colors=nr_of_colors)
-            proj_2d[markers[i]] = table[markers[i]]
+            proj_2d[markers[i]] = list(table[markers[i]])
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
                             hue=markers[i], palette=palette, s=point_size)
         else:
-            proj_2d[markers[i]] = table[markers[i]]
+            proj_2d[markers[i]] = list(table[markers[i]])
             sns.scatterplot(data=proj_2d, x="component 1", y="component 2", ax=ax[int(i / 3)][i % 3], alpha=0.8,
                             hue=markers[i], palette=palette_markers, s=point_size)
     if save:

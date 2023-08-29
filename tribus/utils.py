@@ -1,5 +1,5 @@
 import os, sys, datetime, shutil
-from . import classify
+import classify
 import numpy as np
 import pandas as pd
 import networkx as nx
