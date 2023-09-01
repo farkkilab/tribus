@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cell type annotation &mdash; tribus_documentation 2023. documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Get started" href="tutorial.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            tribus_documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Get started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html#using-tribus">Using Tribus</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">TRIBUS</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Cell type annotation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#run-tribus-from-file">run_tribus_from_file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#run-tribus">run_tribus</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#visualization">Visualization</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#correlation-matrix">correlation_matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#marker-expression">marker_expression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#marker-expression-by-cell-type">marker_expression_by_cell_type</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#heatmap-for-median-expression">heatmap_for_median_expression</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#umap-vis">umap_vis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cell-type-distribution">cell_type_distribution</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#normalizations">Normalizations</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tribus_documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Cell type annotation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tribus.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="cell-type-annotation">
+<h1>Cell type annotation<a class="headerlink" href="#cell-type-annotation" title="Permalink to this headline"></a></h1>
+<p>TRIBUS can perform cell-type annotation on multiple samples via reading them from the file and
+save the results automatically along with plots of the results. It can also take Pandas dataframes as input and
+return the results directly.</p>
+<section id="run-tribus-from-file">
+<h2>run_tribus_from_file<a class="headerlink" href="#run-tribus-from-file" title="Permalink to this headline"></a></h2>
+<p>Run the cell type annotation on all the samples, which are in the input folder and automatically save
+the results into a time-stamped output folder.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="run_tribus_from_file">
+<span class="sig-name descname"><span class="pre">run_tribus_from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_figures</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_tribus_from_file" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_path</strong> (<em>str</em>) -- Path for the input folder (all files in the folder has to be sample for the analysis)</p></li>
+<li><p><strong>output</strong> -- Path for the output folder</p></li>
+<li><p><strong>logic_path</strong> (<em>str</em>) -- Path for the cell type description table (xlsx)</p></li>
+<li><p><strong>depth</strong> (<em>int</em>) -- it determines how many levels (of the lineage tree) do we want to perform the analysis</p></li>
+<li><p><strong>save_figures</strong> (<em>bool</em>) -- if True it save automatic diagnostic plots about the input data and the results</p></li>
+<li><p><strong>normalization</strong> (<em>function</em>) -- A function for data normalization. The function should get a dataframe as an input and it should
+return the normalized data in the same format as the input (same index and column names).
+Tribus will perform the normalization on each level, so the data will be normalized also pre cell type on the
+higher levels. Two type of normalization is available from tribus visualization modul (log normalization and z score
+normalization)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">run_tribus_from_file</span>
+
+<span class="n">run_tribus_from_file</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">output_path</span><span class="p">,</span> <span class="n">logic_path</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>An example for the format of the result table:</p>
+<table class="colwidths-auto docutils align-default" id="id1">
+<caption><span class="caption-text">Result labels</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head stub"></th>
+<th class="head"><p>Global</p></th>
+<th class="head"><p>Tumor</p></th>
+<th class="head"><p>Myeloid</p></th>
+<th class="head"><p>Lymphoid</p></th>
+<th class="head"><p>Stromal</p></th>
+<th class="head"><p>final_label</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p>0</p></th>
+<td><p>Tumor</p></td>
+<td><p>Mesenchymal</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Mesenchymal</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>1</p></th>
+<td><p>Tumor</p></td>
+<td><p>Mesenchymal</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Mesenchymal</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>2</p></th>
+<td><p>Myeloid</p></td>
+<td></td>
+<td><p>Dendritic cells</p></td>
+<td></td>
+<td></td>
+<td><p>Dendritic cells</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>3</p></th>
+<td><p>Tumor</p></td>
+<td><p>Apoptotic</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Apoptotic</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>4</p></th>
+<td><p>Tumor</p></td>
+<td><p>Senescent</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Senescent</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="run-tribus">
+<h2>run_tribus<a class="headerlink" href="#run-tribus" title="Permalink to this headline"></a></h2>
+<p>Run the cell type annotation on one sample, and return the results as pandas dataframes. This function makes it possible to
+use TRIBUS from Jupyter Notebooks and to make fast evaluations and tune the cell-type-description table.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="run_tribus">
+<span class="sig-name descname"><span class="pre">run_tribus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#run_tribus" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_df</strong> (<em>pandas dataframe</em>) -- sample data, where columns are the markers and rows ar the cells, the first column has ro be the Cell ID</p></li>
+<li><p><strong>logic</strong> (<em>dict</em>) -- dictionary of dataframes, where key are the sheets names, of the excel file, which represents the levels, while the values are the cell type description table</p></li>
+<li><p><strong>depth</strong> (<em>int</em>) -- it determines how many levels (of the lineage tree) do we want to perform the analysis</p></li>
+<li><p><strong>normalization</strong> (<em>function</em>) -- A function for data normalization. The function should get a dataframe as an input and it should
+return the normalized data in the same format as the input (same index and column names).
+Tribus will perform the normalization on each level, so the data will be normalized also pre cell type on the
+higher levels. Two type of normalization is available from tribus visualization modul (log normalization and z score
+normalization)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>df of the cell labels and another df with the probability score of the labels</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(pandas dataframe, pandas dataframe)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">run_tribus</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">sample_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path_sample</span><span class="p">)</span>
+<span class="n">df_logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelFile</span><span class="p">(</span><span class="n">path_logic</span><span class="p">)</span>
+<span class="n">logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">df_logic</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">sheet_names</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">labels</span><span class="p">,</span> <span class="n">probabilities</span> <span class="o">=</span> <span class="n">run_tribus</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">labels</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head stub"></th>
+<th class="head"><p>Global</p></th>
+<th class="head"><p>Tumor</p></th>
+<th class="head"><p>Myeloid</p></th>
+<th class="head"><p>Lymphoid</p></th>
+<th class="head"><p>Stromal</p></th>
+<th class="head"><p>final_label</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p>0</p></th>
+<td><p>Tumor</p></td>
+<td><p>Mesenchymal</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Mesenchymal</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>1</p></th>
+<td><p>Tumor</p></td>
+<td><p>Mesenchymal</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Mesenchymal</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>2</p></th>
+<td><p>Myeloid</p></td>
+<td></td>
+<td><p>Dendritic cells</p></td>
+<td></td>
+<td></td>
+<td><p>Dendritic cells</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>3</p></th>
+<td><p>Tumor</p></td>
+<td><p>Apoptotic</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Apoptotic</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>4</p></th>
+<td><p>Tumor</p></td>
+<td><p>Senescent</p></td>
+<td></td>
+<td></td>
+<td></td>
+<td><p>Senescent</p></td>
+</tr>
+</tbody>
+</table>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">probabilities</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="visualization">
+<h1>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline"></a></h1>
+<p>The TRIBUS model offer various visiualizations to better understand the inout data and to evaluate the results.</p>
+<section id="correlation-matrix">
+<h2>correlation_matrix<a class="headerlink" href="#correlation-matrix" title="Permalink to this headline"></a></h2>
+<p>Plots the correlation between the markers. Helps to evaluate the input data. If the data has high quality and normalized,
+the markers, which describes a cell-type should be correlated to each-other.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="correlation_matrix">
+<span class="sig-name descname"><span class="pre">correlation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figure'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">figsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(10,</span> <span class="pre">10)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vlag'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#correlation_matrix" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>pandas dataframe</em>) -- sample data, where columns are the markers and rows ar the cells, the first column has ro be the Cell ID</p></li>
+<li><p><strong>markers</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) -- list of the markers, which we would like to plot the correlation inbetween</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) -- if True it save the plot with the given fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) -- the file name, if save=True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">correlation_matrix</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">markers</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">()</span>
+<span class="n">correlation_matrix</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">markers</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/corr_matrix_new.png"><img alt="_images/corr_matrix_new.png" src="_images/corr_matrix_new.png" style="width: 600px;" /></a>
+</section>
+<section id="marker-expression">
+<h2>marker_expression<a class="headerlink" href="#marker-expression" title="Permalink to this headline"></a></h2>
+<p>It plots the histogram of the each marker expression in the cells. The shape of the histogram can help to decide whether the data
+is well-normalized,  which markers have no variation (it might to worth to exclude them from the analysis), or if outlier filering is needed.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="marker_expression">
+<span class="sig-name descname"><span class="pre">marker_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figure'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#marker_expression" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>pandas dataframe</em>) -- sample data, where columns are the markers and rows ar the cells, the first column has ro be the Cell ID</p></li>
+<li><p><strong>markers</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) -- list of the markers, which we would like to plot the correlation inbetween</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) -- if True it save the plot with the given fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) -- the file name, if save=True</p></li>
+<li><p><strong>log</strong> (<em>bool</em>) -- use logarithmic scale on y axis, if save=True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">marker_expression</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">markers</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">()</span>
+<span class="n">marker_expression</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">markers</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/marker_expression.png"><img alt="_images/marker_expression.png" src="_images/marker_expression.png" style="width: 600px;" /></a>
+</section>
+<section id="marker-expression-by-cell-type">
+<h2>marker_expression_by_cell_type<a class="headerlink" href="#marker-expression-by-cell-type" title="Permalink to this headline"></a></h2>
+<p>It plots the histogram of the each marker expression in the cells separately for each cell type identified by TRIBUS. This plot can
+help to evaluate the results, and point out it changes needed in the cell-type description table.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="marker_expression_by_cell_type">
+<span class="sig-name descname"><span class="pre">marker_expression_by_cell_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figure'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#marker_expression_by_cell_type" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>pandas dataframe</em>) -- sample data, where columns are the markers and rows ar the cells, the first column has ro be the Cell ID</p></li>
+<li><p><strong>labels</strong> (<em>pandas dataframe</em>) -- the labels generated by TRIBUS</p></li>
+<li><p><strong>cell_types</strong> (<em>list</em><em> or </em><em>None</em>) -- the list of cell_types what we want to visualize, if None: it will visualize all the cell types appearing in labels</p></li>
+<li><p><strong>markers</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) -- list of the markers, which we would like to plot the correlation inbetween, if None, it will visualize all the columns in sample data</p></li>
+<li><p><strong>level</strong> (<em>str</em>) -- which level of the labels do we want to visilaize, default will visualize the highest level</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) -- if True it save the plot with the given fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) -- the file name, if save=True</p></li>
+<li><p><strong>log</strong> (<em>bool</em>) -- use logarithmic scale on y axis, if save=True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">marker_expression_by_cell_type</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">sample_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">df_logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelFile</span><span class="p">(</span><span class="n">path_logic</span><span class="p">)</span>
+<span class="n">logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">df_logic</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">sheet_names</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">run_tribus</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+<span class="n">marker_expression_by_cell_type</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/merker_expressions_cell_type.png"><img alt="_images/merker_expressions_cell_type.png" src="_images/merker_expressions_cell_type.png" style="width: 600px;" /></a>
+</section>
+<section id="heatmap-for-median-expression">
+<h2>heatmap_for_median_expression<a class="headerlink" href="#heatmap-for-median-expression" title="Permalink to this headline"></a></h2>
+<p>This is probably the most important plot in the module, it is a big help in the evaluation of the results.
+It shows the median expression of each marker among the cell type, while it also display the cell-type description table,
+so it is easy to compare the results with the expected values. The median expression values are z-score normalized by markers
+to make the plot more descriptive.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="heatmap_for_median_expression">
+<span class="sig-name descname"><span class="pre">heatmap_for_median_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'figure'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">z_score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c_palette</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">sns.color_palette(['lightsteelblue',</span> <span class="pre">'ivory',</span> <span class="pre">'indianred'],</span> <span class="pre">3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vlag'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dendrogram_ratio_</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#heatmap_for_median_expression" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>pandas dataframe</em>) -- sample data, where columns are the markers and rows ar the cells, the first column has ro be the Cell ID</p></li>
+<li><p><strong>labels</strong> (<em>pandas dataframe</em>) -- the labels generated by TRIBUS</p></li>
+<li><p><strong>logic</strong> (<em>dict</em>) -- the cell type discription table as a dictionary, where the keys are the levels and values are pandas dataframes, {str: pandas df}</p></li>
+<li><p><strong>level</strong> (<em>str</em>) -- which level of the labels do we want to visilaize, default will visualize the highest level</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) -- if True it save the plot with the given fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) -- the file name, if save=True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">heatmap_for_median_expression</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">sample_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">df_logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelFile</span><span class="p">(</span><span class="n">path_logic</span><span class="p">)</span>
+<span class="n">logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">df_logic</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">sheet_names</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">run_tribus</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+<span class="n">heatmap_for_median_expression</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/heatmap.png"><img alt="_images/heatmap.png" src="_images/heatmap.png" style="width: 600px;" /></a>
+</section>
+<section id="umap-vis">
+<h2>umap_vis<a class="headerlink" href="#umap-vis" title="Permalink to this headline"></a></h2>
+<p>This function performs dimension reduction using UMAP and then display the results colored by the markers and the labels
+identified by TRIBUS</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="umap_vis">
+<span class="sig-name descname"><span class="pre">umap_vis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supervised=False</span> <span class="pre">level=&quot;Global&quot;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init='spectral'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">random_state=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_neighbors=5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_dist=0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric='correlation'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette_markers='mycolormap'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palette_cell='tab10'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">point_size=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi='figure'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#umap_vis" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_data</strong> (<em>pandas dataframe</em>) -- sample data, where columns are the markers and rows ar the cells, the first column has ro be the Cell ID</p></li>
+<li><p><strong>labels</strong> (<em>pandas dataframe</em>) -- the labels generated by TRIBUS</p></li>
+<li><p><strong>markers</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) -- list of the markers, which we would like to plot the correlation inbetween, if None, it will visualize all the columns in sample data</p></li>
+<li><p><strong>supervised</strong> (<em>bool</em>) -- if True, then it'll use the labels to calculate the dimension reduction</p></li>
+<li><p><strong>level</strong> (<em>str</em>) -- which level of the labels do we want to visilaize, default will visualize the highest level</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) -- if True it save the plot with the given fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) -- the file name, if save=True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">umap_vis</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">sample_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">markers</span> <span class="o">=</span> <span class="n">sample_data</span><span class="o">.</span><span class="n">columns</span><span class="p">()</span>
+<span class="n">df_logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelFile</span><span class="p">(</span><span class="n">path_logic</span><span class="p">)</span>
+<span class="n">logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">df_logic</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">sheet_names</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">run_tribus</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+<span class="n">umap_vis</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">markers</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/umap.png"><img alt="_images/umap.png" src="_images/umap.png" style="width: 600px;" /></a>
+</section>
+<section id="cell-type-distribution">
+<h2>cell_type_distribution<a class="headerlink" href="#cell-type-distribution" title="Permalink to this headline"></a></h2>
+<p>The function plots a simple barplot about the distribution of the cell types in the results.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="cell_type_distribution">
+<span class="sig-name descname"><span class="pre">cell_type_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dpi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'Figure'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cell_type_distribution" title="Permalink to this definition"></a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> (<em>pandas dataframe</em>) -- the labels generated by TRIBUS</p></li>
+<li><p><strong>level</strong> (<em>str</em>) -- which level of the labels do we want to visilaize, default will visualize the highest level</p></li>
+<li><p><strong>save</strong> (<em>bool</em>) -- if True it save the plot with the given fname</p></li>
+<li><p><strong>fname</strong> (<em>str</em>) -- the file name, if save=True</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">cell_type_distribution</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="n">sample_data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="n">markers</span> <span class="o">=</span> <span class="n">sample_data</span><span class="o">.</span><span class="n">columns</span><span class="p">()</span>
+<span class="n">df_logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelFile</span><span class="p">(</span><span class="n">path_logic</span><span class="p">)</span>
+<span class="n">logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">df_logic</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">sheet_names</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">labels</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">run_tribus</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+<span class="n">cell_type_distribution</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="normalizations">
+<h1>Normalizations<a class="headerlink" href="#normalizations" title="Permalink to this headline"></a></h1>
+<p>Normalize data on each level</p>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tutorial.html" class="btn btn-neutral float-left" title="Get started" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Färkkila lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

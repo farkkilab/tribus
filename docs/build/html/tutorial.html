@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="Python" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get started &mdash; tribus_documentation 2023. documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Cell type annotation" href="tribus.html" />
+    <link rel="prev" title="Welcome to TRIBUS&#39;s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            tribus_documentation
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Tutorial</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Get started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#inputs">Inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#using-tribus">Using Tribus</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#data-exploration-and-preprocessing">Data exploration and preprocessing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cell-type-annotation">Cell type annotation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analysing-the-results">Analysing the results</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tribus.html">Cell type annotation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tribus.html#visualization">Visualization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tribus.html#normalizations">Normalizations</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">tribus_documentation</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Get started</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tutorial.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="get-started">
+<h1>Get started<a class="headerlink" href="#get-started" title="Permalink to this headline"></a></h1>
+<p>Install TRIBUS via pip:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>tribus
+</pre></div>
+</div>
+<p>Install TRIBUS in Conda environment:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>install<span class="w"> </span>tribus
+</pre></div>
+</div>
+<section id="inputs">
+<h2>Inputs<a class="headerlink" href="#inputs" title="Permalink to this headline"></a></h2>
+<p>Tribus uses two tables as inputs. The first one is the data itself, on which we would like to perform the
+cell-type annotation. The second one describes the cell types what we expect to be present in our data.
+The cell-types are described by values [-1, 0, 1], which represents the expected markers expressions in one
+particular cell-types. The cell-type annotation is hierarchical, which means first we can define higher level cell-types
+and then we can split them into more detailed categories. An example of a lineage tree can be seen below,
+which shows how the hierarchical clustering is done.</p>
+<a class="reference internal image-reference" href="_images/lineage_tree.png"><img alt="_images/lineage_tree.png" src="_images/lineage_tree.png" style="width: 600px;" /></a>
+<p><strong>Sample data (csv):</strong></p>
+<p>Contains the quantification data from the images. Columns should contain the markers and rows should
+contain the cells. The first column has to contain IDs for the cells and the ID has to be unique. The table can contain columns which are
+not part of the analysis (like X and Y coordinates of the cell), TRIBUS will filter the table to use only the
+necessary markers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sample_data</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</pre></div>
+</div>
+<table class="colwidths-auto docutils align-default" id="id1">
+<caption><span class="caption-text">Sample data</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head stub"><p>ID</p></th>
+<th class="head"><p>X Position</p></th>
+<th class="head"><p>Y Position</p></th>
+<th class="head"><p>Area</p></th>
+<th class="head"><p>Eccentricity</p></th>
+<th class="head"><p>Hoechst_1</p></th>
+<th class="head"><p>NaK_ATPase</p></th>
+<th class="head"><p>Hoechst_2</p></th>
+<th class="head"><p>PAX8</p></th>
+<th class="head"><p>PanCK</p></th>
+<th class="head"><p>CD45</p></th>
+<th class="head"><p>Hoechst_3</p></th>
+<th class="head"><p>Iba1</p></th>
+<th class="head"><p>Vimentin</p></th>
+<th class="head"><p>CD8</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p>1</p></th>
+<td><p>5936.515010006671</p></td>
+<td><p>19505.23482321548</p></td>
+<td><p>1499</p></td>
+<td><p>0.8398916344970062</p></td>
+<td><p>6736.040693795864</p></td>
+<td><p>320.628418945964</p></td>
+<td><p>9605.503002001336</p></td>
+<td><p>129.5657104736491</p></td>
+<td><p>581.0020013342228</p></td>
+<td><p>106.45963975983987</p></td>
+<td><p>10473.811207471648</p></td>
+<td><p>163.5010006671114</p></td>
+<td><p>123.52034689793196</p></td>
+<td><p>106.04202801867912</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>2</p></th>
+<td><p>6196.217048710601</p></td>
+<td><p>22677.07736389685</p></td>
+<td><p>1396</p></td>
+<td><p>0.5773154029117625</p></td>
+<td><p>5866.619627507163</p></td>
+<td><p>179.46131805157594</p></td>
+<td><p>6134.684097421204</p></td>
+<td><p>122.75</p></td>
+<td><p>169.50143266475644</p></td>
+<td><p>105.30659025787966</p></td>
+<td><p>8683.305873925501</p></td>
+<td><p>312.615329512894</p></td>
+<td><p>125.26361031518624</p></td>
+<td><p>108.68767908309457</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>3</p></th>
+<td><p>37050.75381903643</p></td>
+<td><p>11394.435957696827</p></td>
+<td><p>1702</p></td>
+<td><p>0.4666065351136428</p></td>
+<td><p>8241.886016451233</p></td>
+<td><p>257.43772032902467</p></td>
+<td><p>4858.68625146886</p></td>
+<td><p>128.20857814336074</p></td>
+<td><p>174.7632197414806</p></td>
+<td><p>104.36662749706228</p></td>
+<td><p>6849.134547591069</p></td>
+<td><p>194.25910693302</p></td>
+<td><p>125.70740305522914</p></td>
+<td><p>102.31198589894242</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>4</p></th>
+<td><p>30095.75526932084</p></td>
+<td><p>12760.01112412178</p></td>
+<td><p>1708</p></td>
+<td><p>0.6176913464677574</p></td>
+<td><p>10089.635831381733</p></td>
+<td><p>253.28981264637</p></td>
+<td><p>7071.768735362998</p></td>
+<td><p>128.29976580796253</p></td>
+<td><p>185.9069086651054</p></td>
+<td><p>106.03629976580795</p></td>
+<td><p>8947.936768149882</p></td>
+<td><p>309.78220140515225</p></td>
+<td><p>124.9953161592506</p></td>
+<td><p>105.95081967213116</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>5</p></th>
+<td><p>34728.02968960864</p></td>
+<td><p>10593.85290148448</p></td>
+<td><p>1482</p></td>
+<td><p>0.5274033096408989</p></td>
+<td><p>25663.173414304994</p></td>
+<td><p>513.7503373819163</p></td>
+<td><p>14967.894736842103</p></td>
+<td><p>177.14912280701753</p></td>
+<td><p>720.7914979757085</p></td>
+<td><p>106.84480431848851</p></td>
+<td><p>22063.045209176787</p></td>
+<td><p>207.7004048582996</p></td>
+<td><p>132.88191632928476</p></td>
+<td><p>104.77125506072876</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Cell type description table (xlsx):</strong></p>
+<p>Contains the description of each expected cell-types. Examaple data:</p>
+<table class="colwidths-auto docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head stub"><p>Markers</p></th>
+<th class="head"><p>Cell-type1</p></th>
+<th class="head"><p>Cell-type2</p></th>
+<th class="head"><p>Cell-type3</p></th>
+<th class="head"><p>Cell-type4</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><th class="stub"><p>Marker1</p></th>
+<td><p>1</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>-1</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>Marker2</p></th>
+<td><p>-1</p></td>
+<td><p>-1</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>Marker3</p></th>
+<td><p>1</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><th class="stub"><p>Marker4</p></th>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+<td><p>-1</p></td>
+</tr>
+<tr class="row-even"><th class="stub"><p>Marker5</p></th>
+<td><p>0</p></td>
+<td><p>-1</p></td>
+<td><p>1</p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each node in the lineage tree has to be a separate sheet in the xlsx file.
+The first sheet always called: &quot;Global&quot;, the follwoing sheets called as the corresponding higher level cell-type.
+Some rules have to be considered, when we design the table:</p>
+<ul class="simple">
+<li><p>All cell types names have to be unique across all the level</p></li>
+<li><p>All level names (except the 1st level) have to apper in a previous level as a cell-type</p></li>
+<li><p>The sheet has to be in the right order in the xlsx file (Global, first level' sheets, second level's sheets, etc.)</p></li>
+<li><p>all cell-type has to have at least one positive (1) marker score</p></li>
+<li><p>That markers which are used in the table have to be in the sample data</p></li>
+</ul>
+<p>An example of the cell-type description table can be found here:</p>
+</section>
+</section>
+<section id="using-tribus">
+<h1>Using Tribus<a class="headerlink" href="#using-tribus" title="Permalink to this headline"></a></h1>
+<p>For this tutorial, we are providing an example dataset and cell-type description table, to perform the cell-type annotation,
+and to familiarize yourself with the possibilities of the Tribus package. High-Grade-serus ovarian cancer, after the
+chemotherapy. The data is produced by the CyCIF technology, segmentation, quantification, quality control is perfromed.
+We suggest to preform proper quality control on the images, by cutting out blured, over-expressed
+regions from the whole-slide images.</p>
+<p>First of all let´s load all the required packages and functions</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">tribus</span> <span class="kn">import</span> <span class="n">correlation_matrix</span><span class="p">,</span> <span class="n">marker_expression</span><span class="p">,</span> <span class="n">log_zscore_normalization</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+</pre></div>
+</div>
+<section id="data-exploration-and-preprocessing">
+<h2>Data exploration and preprocessing<a class="headerlink" href="#data-exploration-and-preprocessing" title="Permalink to this headline"></a></h2>
+<p>We provide some visulaization functions to explore the quantification data. First, you can
+display the correlations-between markers. In an ideal data the markers describing the same cell-type, should
+be highly correlated.</p>
+<p><strong>Read-in the sample file and visualize the correlation matrix:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sample</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">markers</span> <span class="o">=</span> <span class="n">sample</span><span class="o">.</span><span class="n">columns</span>
+<span class="n">correlation_matrix</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">markers</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/corr_matrix_new.png"><img alt="_images/corr_matrix_new.png" src="_images/corr_matrix_new.png" style="width: 600px;" /></a>
+<p>Furthermore, it is possible to visualize the distribution of the expression values of each markers. It helps to evaluate,
+if there are still outliers, which marker has a bad quality etc.</p>
+<p><strong>Visualize the marker's expression values:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">marker_expression</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">markers</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/marker_expression.png"><img alt="_images/marker_expression.png" src="_images/marker_expression.png" style="width: 600px;" /></a>
+<p>We recommend to normalize the input data, before performing the cell type calling. For this we suggest to perform
+log-normalization, and after the log-normalized data use z-score normalization. We provide a function, which performs
+these two step together. However, it has to be noted, that not all dataset is unique, so it is possible, that another
+type of normalization works better.</p>
+<p><strong>Normalize the data:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">normalized_sample</span> <span class="o">=</span> <span class="n">log_zscore_normalization</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Let's visualize again the data, and check if it become nicer after the normalization:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">marker_expression</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">markers</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/marker_expression.png"><img alt="_images/marker_expression.png" src="_images/marker_expression.png" style="width: 600px;" /></a>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">correlation_matrix</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="n">markers</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/corr_matrix_new.png"><img alt="_images/corr_matrix_new.png" src="_images/corr_matrix_new.png" style="width: 600px;" /></a>
+</section>
+<section id="cell-type-annotation">
+<h2>Cell type annotation<a class="headerlink" href="#cell-type-annotation" title="Permalink to this headline"></a></h2>
+<p>Then we can start the actual analysis. We should load the cell type description table into a dictionary, where keys are the
+level-names and values are the actual dataframes. The first level always has to be names &quot;Global&quot;. In the dataframes the
+columns are the cell type names and the rows are the marker names. For further requeriments of the cell type description table can be
+found here.</p>
+<p><strong>Load the cell type description table:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">ExcelFile</span><span class="p">(</span><span class="s2">&quot;logic.xlsx&quot;</span><span class="p">)</span>
+<span class="n">logic</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">df</span><span class="o">.</span><span class="n">sheet_names</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Perform the cell type annotation with Tribus:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="p">,</span> <span class="n">scores</span> <span class="o">=</span> <span class="n">run_tribus</span><span class="p">(</span><span class="n">normalized_sample</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The labels dataframes contains the assigned labels on each level and also the final labels, from the lowest level.
+There can occur labels like &quot;other&quot; and &quot;undefined&quot;. Tribus gives the desciption &quot;other&quot;, if the score is too low for
+each cell types. It assigns &quot;undefined&quot; if the highest score for a cell-type is too close to the second-highest score, so the
+assignment would be uncertain.</p>
+</section>
+<section id="analysing-the-results">
+<h2>Analysing the results<a class="headerlink" href="#analysing-the-results" title="Permalink to this headline"></a></h2>
+<p>The very best way to evaluate the results is to look the images using Napari image viewer tool with its Tribus plug-in
+displaying the labels on the image. The tutorial for Napari and Tribus can be found here. But we also provide further diagnostic plots
+to help to evaluate the annotation.</p>
+<p>The most powerful plot in the module is out heatmap,it is a big help in the evaluation of the results.
+It shows the median expression of each marker among the cell type, while it also display the cell-type description table,
+so it is easy to compare the results with the expected values. The median expression values are z-score normalized by markers
+to make the plot more descriptive.</p>
+<p><strong>Let's display the heatmap:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">heatmap_for_median_expression</span><span class="p">(</span><span class="n">normalized_sample</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">logic</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/heatmap.png"><img alt="_images/heatmap.png" src="_images/heatmap.png" style="width: 600px;" /></a>
+<p>The next thing to check how many cells are in each cell type categories. For this we can use the built-in function
+$cell_type_distribution()$.</p>
+<p><strong>Number of cells in cell type categories:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">cell_type_distribution</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/cell_type_distr.png"><img alt="_images/cell_type_distr.png" src="_images/cell_type_distr.png" style="width: 600px;" /></a>
+<p>You can also perform dimension reduction on the data to visualize it using UMAP. In this way we can check how good was the
+clustering and how well separated the different cell types. Tribus provides a function for visualization, it colors the UMAP
+by each marker expression and cell types, so it is easier to evaluate if ech cell types has the correct markers highly expressed.
+There is an option, to use semi-supervised UMAP, which uses the the Tribus-cell-type labels to perform the dimension reduction,
+which makes the evaluation even more efficient.</p>
+<p><strong>First, let's take a look to the normal, unsupervised UMAP visualisation:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">umap_vis</span><span class="p">(</span><span class="n">sample_file</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/umap.png"><img alt="_images/umap.png" src="_images/umap.png" style="width: 600px;" /></a>
+<p><strong>Then visualize the supervised UMAP:</strong>
+.. code-block:: python</p>
+<blockquote>
+<div><p>umap_vis(sample_file, labels, supervised=False)</p>
+</div></blockquote>
+<a class="reference internal image-reference" href="_images/umap.png"><img alt="_images/umap.png" src="_images/umap.png" style="width: 600px;" /></a>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to TRIBUS&#39;s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tribus.html" class="btn btn-neutral float-right" title="Cell type annotation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Färkkila lab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
