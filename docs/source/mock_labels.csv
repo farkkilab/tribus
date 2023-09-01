@@ -1,0 +1,6 @@
+,Global,Tumor,Myeloid,Lymphoid,Stromal,final_label
+0,Tumor,Mesenchymal,,,,Mesenchymal
+1,Tumor,Mesenchymal,,,,Mesenchymal
+2,Myeloid,,Dendritic cells,,,Dendritic cells
+3,Tumor,Apoptotic,,,,Apoptotic
+4,Tumor,Senescent,,,,Senescent
