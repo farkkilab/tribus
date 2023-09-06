@@ -11,7 +11,45 @@ import visualization
 MAX_PERCENTILE = 99
 
 
-def cluster_cells(sample_data, logic, level, tuning, max_evals, sigma, learning_rate, random_state):
+def hyperparameter_tuning(sample_data, max_evals): 
+    rows_data = sample_data.shape[0]
+    x = int(np.sqrt(5 * np.sqrt(rows_data)))
+    print("x is {}".format(x))
+    y = x
+    input_len = sample_data.shape[1]
+    sigma = 0.003
+    learning_rate = 5
+
+    space = {
+        'sig': hp.uniform("sig", 0.001, 5), 
+        'learning_rate': hp.uniform("learning_rate", 0.001, 5),
+    }
+    def som_fn(space): 
+        sig = space['sig']
+        learning_rate = space['learning_rate']
+        val = MiniSom(x=x, 
+                    y=x, 
+                    input_len=input_len,
+                    sigma=sig,
+                    learning_rate=learning_rate
+                    ).quantization_error(sample_data.to_numpy())
+        print("Current quantization error is {}".format(val))
+        return{'loss': val, 'status': STATUS_OK}
+    trials = Trials()
+    best = fmin(fn = som_fn, 
+                space=space, 
+                algo = tpe.suggest, 
+                max_evals=int(max_evals), 
+                trials=trials)
+    print('best: {}'.format(best))
+    sigma = best['sig']
+    learning_rate = best['learning_rate']
+    print("Current grid size x is {}, grid size y is {}, sigma is {}, learning rate is {}.".format(x, y, sigma, learning_rate))
+
+    return sigma, learning_rate
+
+
+def cluster_cells(sample_data, logic, level, sigma, learning_rate, random_state):
     '''run self-organized map to assign cells to nodes
     sample_data: dataframe
     logic: dictionary of dataframes
@@ -22,60 +60,12 @@ def cluster_cells(sample_data, logic, level, tuning, max_evals, sigma, learning_
     marker_data = np.arcsinh(sample_data).to_numpy()
     som_shape = (grid_size, grid_size)
 
-    if tuning == False: 
+    som = MiniSom(som_shape[0], som_shape[1], marker_data.shape[1], sigma=sigma, learning_rate=learning_rate,
+            neighborhood_function='gaussian', random_seed=random_state)
+    som.train_batch(marker_data, 500, verbose=True)
 
-        som = MiniSom(som_shape[0], som_shape[1], marker_data.shape[1], sigma=sigma, learning_rate=learning_rate,
-                neighborhood_function='gaussian', random_seed=random_state)
-        som.train_batch(marker_data, 500, verbose=True)
-        winner_coordinates = np.array([som.winner(x) for x in marker_data]).T
-        cluster_index = np.ravel_multi_index(winner_coordinates, som_shape)
-
-    else: 
-
-        rows_data = marker_data.shape[0]
-        x = int(np.sqrt(5 * np.sqrt(rows_data)))
-        print("x is {}".format(x))
-        y = x
-        input_len = marker_data.shape[1]
-        sigma = 0.003
-        learning_rate = 5
-        max_evals = max_evals
-
-        space = {
-            'sig': hp.uniform("sig", 0.001, 5), 
-            'learning_rate': hp.uniform("learning_rate", 0.001, 5),
-        }
-
-        def som_fn(space): 
-            sig = space['sig']
-            learning_rate = space['learning_rate']
-            val = MiniSom(x=x, 
-                        y=x, 
-                        input_len=input_len,
-                        sigma=sig,
-                        learning_rate=learning_rate
-                        ).quantization_error(marker_data)
-            print("Current quantization error is {}".format(val))
-            return{'loss': val, 'status': STATUS_OK}
-
-        trials = Trials()
-        best = fmin(fn = som_fn, 
-                    space=space, 
-                    algo = tpe.suggest, 
-                    max_evals = max_evals, 
-                    trials=trials)
-        print('best: {}'.format(best))
-
-        sigma = best['sig']
-        learning_rate = best['learning_rate']
-        print("Current grid size x is {}, grid size y is {}, sigma is {}, learning rate is {}.".format(x, y, sigma, learning_rate))
-
-        som = MiniSom(som_shape[0], som_shape[1], marker_data.shape[1], sigma=sigma, learning_rate=learning_rate,
-                neighborhood_function='gaussian', random_seed=random_state)
-        som.train_batch(marker_data, 500, verbose=True)
-        winner_coordinates = np.array([som.winner(x) for x in marker_data]).T
-        cluster_index = np.ravel_multi_index(winner_coordinates, som_shape)
-
+    winner_coordinates = np.array([som.winner(x) for x in marker_data]).T
+    cluster_index = np.ravel_multi_index(winner_coordinates, som_shape)
     unique, counts = np.unique(cluster_index, return_counts=True)
 
     # For each node calculate median expression of each gating marker
@@ -214,7 +204,7 @@ def subset(sample_data, current_level, previous_level, previous_labels, logic):
     return new_data
 
 
-def clustering(sample_data, logic, level, tuning, max_evals, sigma, learning_rate, clustering_threshold, undefined_threshold, other_threshold, random_state):
+def clustering(sample_data, logic, level, sigma, learning_rate, clustering_threshold, undefined_threshold, other_threshold, random_state):
     '''
     assignig the labels to each cell, either sell by cell or first doing the clustering and then node by node
     sample_data: dataframe
@@ -241,7 +231,7 @@ def clustering(sample_data, logic, level, tuning, max_evals, sigma, learning_rat
 
     else: # if enough cells, do clustering
         # get a table, rows are the clusters and columns are the cell-types, having the scoring, highest the more probable
-        data_to_score, labeled = cluster_cells(sample_data, logic, level, tuning, max_evals, sigma, learning_rate, random_state)
+        data_to_score, labeled = cluster_cells(sample_data, logic, level, sigma, learning_rate, random_state)
         scores_pd = score_nodes(data_to_score, logic, level)
         # assign highest scored label
         scores_labels = pd.DataFrame()
@@ -261,7 +251,7 @@ def clustering(sample_data, logic, level, tuning, max_evals, sigma, learning_rat
 
 
 def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_level, result_table, prob_table,
-             previous_labels, output=None, normalization=None, sample_name=None, tuning=False, max_evals=15, 
+             previous_labels, output=None, normalization=None, sample_name=None, tuning=None, max_evals=5, 
              sigma=.5, learning_rate=.5, clustering_threshold=15_000, undefined_threshold=0.01,
              other_threshold=0.4, random_state=None):
     '''
@@ -290,13 +280,25 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
         else:
             data_subset = subset(sample_data, node, previous_level, result_table, logic)
             print(f'{node}, subsetting done')
+
             if normalization is not None:
                 data_subset = normalization(data_subset)
 
             # only using the markers which are containing different values than zeros
             filtered_markers = list(logic[node].loc[(logic[node] != 0).any(axis=1)].index)
             logic[node] = logic[node].loc[filtered_markers]
-            result, prob = clustering(data_subset, logic, node, sigma, tuning, max_evals, learning_rate, clustering_threshold, undefined_threshold, other_threshold, random_state)
+
+            # Update the SOM parameter if we want auto parameter tuning
+            if tuning != None: 
+                # update sigma and learning rate by hyperparameter tuning
+                print("Start hyperparameter tuning. ")
+                sigma, learning_rate = hyperparameter_tuning(sample_data, max_evals=max_evals)
+            else: 
+                sigma=sigma
+                learning_rate = learning_rate
+
+            result, prob = clustering(data_subset, logic, node, sigma, learning_rate, 
+                                      clustering_threshold, undefined_threshold, other_threshold, random_state)
 
         if result_table.empty:
             result_table = result
@@ -332,7 +334,8 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
             result_table, prob_table = traverse(tree, sample_data, logic, max_depth, current_depth + 1, j, i, result_table,
                                                 prob_table, previous_labels, output=output, normalization=normalization, 
                                                 sample_name=sample_name, tuning=tuning, max_evals=max_evals, 
-                                                sigma=sigma, learning_rate=learning_rate, clustering_threshold=clustering_threshold,
+                                                sigma=sigma, learning_rate=learning_rate, 
+                                                clustering_threshold=clustering_threshold,
                                                 undefined_threshold=undefined_threshold, other_threshold=other_threshold,
                                                 random_state=random_state)
     return result_table, prob_table
@@ -360,7 +363,8 @@ def get_final_cells(table):
     return new_column
 
 
-def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None, sample_name=None, tuning=False, max_evals=15, sigma=.5, learning_rate=.5, 
+def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None, sample_name=None, 
+        tuning=None, max_evals=5, sigma=.5, learning_rate=.5, 
         clustering_threshold=15_000, undefined_threshold=0.01, other_threshold=0.4, random_state=None):
     """
     tribus main function, running the actual analysis by traversing the lineage tree
@@ -388,7 +392,8 @@ def run(sample_data, logic, depth, previous_labels, tree, output=None, normaliza
 
     result_table, prob_table = traverse(tree, sample_data, logic, depth, 0, "Global", pd.DataFrame(), result_table,
                                         prob_table, previous_labels, output, normalization=normalization, sample_name=sample_name,
-                                        tuning=tuning, max_evals=max_evals, sigma=sigma, learning_rate=learning_rate, 
+                                        tuning=tuning, max_evals=max_evals, 
+                                        sigma=sigma, learning_rate=learning_rate, 
                                         clustering_threshold=clustering_threshold, undefined_threshold=undefined_threshold,
                                         other_threshold=other_threshold, random_state=random_state)
 
