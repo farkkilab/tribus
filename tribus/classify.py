@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from minisom import MiniSom
+from GMM import compute_marker_model, get_score_mat_main
 from hyperopt import fmin, tpe, hp, Trials, STATUS_OK
 import math
 import visualization
@@ -48,6 +49,8 @@ def hyperparameter_tuning(sample_data, max_evals):
 
     return sigma, learning_rate
 
+def normalize_row(row):
+    return (row - np.mean(row)) / np.std(row)
 
 def cluster_cells(sample_data, logic, level, sigma, learning_rate, random_state):
     '''run self-organized map to assign cells to nodes
@@ -71,7 +74,10 @@ def cluster_cells(sample_data, logic, level, sigma, learning_rate, random_state)
     # For each node calculate median expression of each gating marker
     labeled = sample_data[logic[level].index.values].copy()
     labeled['label'] = cluster_index
-    data_to_score = labeled.groupby('label').mean()  # for all cells the median marker level of each cluster FIXME median or mean? 
+    data_to_score = labeled.groupby('label').median()
+
+    data_to_score = data_to_score.apply(normalize_row, axis=0)
+
     return data_to_score, labeled
 
 """
@@ -185,6 +191,19 @@ def score_nodes(data_to_score, logic, level):
     scores_pd = pd.DataFrame(scores_matrix, columns=logic[level].columns.values, index=data_to_score.index)
     return scores_pd
 
+# def score_nodes(data_to_score, logic, level):
+#     """
+#     scoring function for the clusters, which cluster belong to which cell-type
+#     data_to_score: dataframe
+#     logic: dictionary of dataframes
+#     level: string
+#     returns: dataframe
+#     """
+#     mk_model =  compute_marker_model(data_to_score, logic[level], 0.0)
+#     score = get_score_mat_main(data_to_score.to_numpy(), logic[level], mk_model)
+#     scores_pd = pd.DataFrame(score, columns=logic[level].columns, index=data_to_score.index)
+#     return scores_pd
+
 
 def subset(sample_data, current_level, previous_level, previous_labels, logic):
     '''
@@ -251,7 +270,7 @@ def clustering(sample_data, logic, level, sigma, learning_rate, clustering_thres
 
 
 def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_level, result_table, prob_table,
-             previous_labels, output=None, normalization=None, sample_name=None, tuning=None, max_evals=5, 
+             previous_labels, output=None, normalization=None, sample_name=None, tuning=5,  
              sigma=.5, learning_rate=.5, clustering_threshold=15_000, undefined_threshold=0.01,
              other_threshold=0.4, random_state=None):
     '''
@@ -289,9 +308,10 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
             logic[node] = logic[node].loc[filtered_markers]
 
             # Update the SOM parameter if we want auto parameter tuning
-            if tuning != None: 
+            if tuning != 0: 
                 # update sigma and learning rate by hyperparameter tuning
                 print("Start hyperparameter tuning. ")
+                max_evals = int(tuning)
                 sigma, learning_rate = hyperparameter_tuning(sample_data, max_evals=max_evals)
             else: 
                 sigma=sigma
@@ -333,7 +353,7 @@ def traverse(tree, sample_data, logic, max_depth, current_depth, node, previous_
         for i, j in out_edges:
             result_table, prob_table = traverse(tree, sample_data, logic, max_depth, current_depth + 1, j, i, result_table,
                                                 prob_table, previous_labels, output=output, normalization=normalization, 
-                                                sample_name=sample_name, tuning=tuning, max_evals=max_evals, 
+                                                sample_name=sample_name, tuning=tuning,
                                                 sigma=sigma, learning_rate=learning_rate, 
                                                 clustering_threshold=clustering_threshold,
                                                 undefined_threshold=undefined_threshold, other_threshold=other_threshold,
@@ -364,7 +384,7 @@ def get_final_cells(table):
 
 
 def run(sample_data, logic, depth, previous_labels, tree, output=None, normalization=None, sample_name=None, 
-        tuning=None, max_evals=5, sigma=.5, learning_rate=.5, 
+        tuning=5, sigma=.5, learning_rate=.5, 
         clustering_threshold=15_000, undefined_threshold=0.01, other_threshold=0.4, random_state=None):
     """
     tribus main function, running the actual analysis by traversing the lineage tree
@@ -392,8 +412,7 @@ def run(sample_data, logic, depth, previous_labels, tree, output=None, normaliza
 
     result_table, prob_table = traverse(tree, sample_data, logic, depth, 0, "Global", pd.DataFrame(), result_table,
                                         prob_table, previous_labels, output, normalization=normalization, sample_name=sample_name,
-                                        tuning=tuning, max_evals=max_evals, 
-                                        sigma=sigma, learning_rate=learning_rate, 
+                                        tuning=tuning, sigma=sigma, learning_rate=learning_rate, 
                                         clustering_threshold=clustering_threshold, undefined_threshold=undefined_threshold,
                                         other_threshold=other_threshold, random_state=random_state)
 

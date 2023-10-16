@@ -77,7 +77,7 @@ def main(argv=None):
 
 
 def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=False, normalization=None, 
-                         tuning=None, max_evals=5, sigma=.5, learning_rate=.5, clustering_threshold=15_000,
+                         tuning=5, sigma=.5, learning_rate=.5, clustering_threshold=15_000,
                          undefined_threshold=0.01, other_threshold=0.4, random_state=None):
     '''Running tribus on multiple samples
     input_path: string (path for the folder, which contains the sample files)
@@ -113,14 +113,14 @@ def run_tribus_from_file(input_path, output, logic_path, depth=1, save_figures=F
         print('print output folder', output_folder)
 
         # This call does everything
-        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=normalization, tuning=tuning, max_evals=max_evals, 
+        utils.run_classify(input_files, logic, output_folder, depth, output, tree, save_figures, normalization=normalization, tuning=tuning, 
                            sigma=sigma, learning_rate=learning_rate, clustering_threshold=clustering_threshold, undefined_threshold=undefined_threshold,
                            other_threshold=other_threshold, random_state=random_state)
     else:
         raise AssertionError('invalid data: check logs.')
 
 
-def run_tribus(input_df, logic, depth=1, normalization=None, tuning=None, max_evals=5, 
+def run_tribus(input_df, logic, depth=1, normalization=None, tuning=5, 
                sigma=.5, learning_rate=.5, clustering_threshold=15_000, undefined_threshold=0.01,
                other_threshold=0.4, random_state=None):
     valid_depth = True
@@ -138,8 +138,7 @@ def run_tribus(input_df, logic, depth=1, normalization=None, tuning=None, max_ev
     if valid_input and valid_logic and valid_depth:
         tree = utils.build_tree(logic, depth)
         result_table, prob_table = classify.run(input_df, logic, depth, pd.DataFrame(), tree, normalization=normalization,
-                                                tuning=tuning, max_evals=max_evals, 
-                                                sigma=sigma, learning_rate=learning_rate, 
+                                                tuning=tuning, sigma=sigma, learning_rate=learning_rate, 
                                                 clustering_threshold=clustering_threshold, undefined_threshold=undefined_threshold,
                                                 other_threshold=other_threshold, random_state=random_state)
     else:
