@@ -1,10 +1,12 @@
+import sys
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import scipy.stats as stats
 import matplotlib.pyplot as plt
-from umap import UMAP
-import sys
+import matplotlib
+# from umap import UMAP
+import umap.umap_ as umap
 import math
 import matplotlib.backends.backend_pdf
 from matplotlib.patches import Patch
@@ -98,7 +100,7 @@ def heatmap_for_median_expression(sample_file, labels, logic, level="Global", sa
 
     df_annotation_table = df_annotation_table.set_index(df_median.index)
     df_median = transform(df_median.transpose())
-    sns.clustermap(df_median, figsize=(10, 8), cmap=cmap_, col_colors=df_annotation_table,
+    sns.clustermap(df_median.replace(np.nan,0), figsize=(8, 6), cmap=cmap_, col_colors=df_annotation_table,
                    dendrogram_ratio=dendrogram_ratio_, colors_ratio=0.02).fig.suptitle(title, fontweight="bold", y=1.01)
     handles = [Patch(facecolor=lut[name]) for name in lut]
     plt.legend(handles, lut, title='Expected values', bbox_to_anchor=(1, 1), bbox_transform=plt.gcf().transFigure,
@@ -138,12 +140,12 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
 
     if supervised:
         proj_2d = pd.DataFrame(
-            data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
-                      min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered, y=y),
+            data=umap.UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
+                      min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered, y = y),
             columns=["component 1", "component 2"])
     else:
         proj_2d = pd.DataFrame(
-            data=UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
+            data=umap.UMAP(n_components=2, init=init, random_state=random_state, n_neighbors=n_neighbors,
                       min_dist=min_dist, metric=metric).fit_transform(sample_file_filtered),
             columns=["component 1", "component 2"])
 

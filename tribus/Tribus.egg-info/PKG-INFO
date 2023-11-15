@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: Tribus
+Version: 0.0.1
+Summary: 'Cell type based analysis of multiplexed imaging data'
+Home-page: 'https://github.com/farkkilab/tribus'
+Author: 'Julia Casado, Angela Szabo, Miikka Kilkkila'
+Author-email: 'julia.casado@helsinki.fi'
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Science/Research
+Classifier: Natural Language :: English
+Requires-Python: >=3.8
+License-File: LICENSE
+
+'Tribus is a lightweight package to help analysis of multiplexed imaging data, such as cyclic immunofluorescence imaging (CyCIF). Its core functionality lies on automatic cell type assignment of large datasets via hiarchical categorization based on user-given prior knowledge.'
