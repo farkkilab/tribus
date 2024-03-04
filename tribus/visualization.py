@@ -172,15 +172,15 @@ def umap_vis(sample_file, labels, markers, supervised=False, save=False, fname=N
         plt.show()
 
 
-def marker_expression(sample_data, markers=None, save=False, fname=None, dpi='figure', log=False):
+def marker_expression(sample_data, markers=None, save=False, fname=None, title="Marker expression level", dpi='figure', log=False):
     if markers is None:
         markers = sample_data.columns.values
 
-    fig, axs = plt.subplots(math.ceil(len(markers) / 6), 6, squeeze=False, figsize=(30, 20))
-    fig.suptitle("Marker expression level", fontsize=30)
+    fig, axs = plt.subplots(math.ceil(len(markers) / 5), 5, squeeze=False, figsize=(4*5, 3*math.ceil(len(markers) / 5)))
+    fig.suptitle(title, fontsize=30)
     if log:
         for i in range(len(markers)):
-            ax = axs[i//6, i%6]
+            ax = axs[i//5, i%5]
             plt.sca(ax)
             hist, edges = np.histogram(sample_data[markers[i]], bins=50)
             plt.stairs(np.log(hist)+ sys.float_info.epsilon, edges, label="{}".format(markers[i]))
@@ -189,7 +189,7 @@ def marker_expression(sample_data, markers=None, save=False, fname=None, dpi='fi
             plt.tight_layout()
     else:
         for i in range(len(markers)):
-            ax = axs[i//6, i%6]
+            ax = axs[i//5, i%5]
             plt.sca(ax)
             hist, edges = np.histogram(sample_data[markers[i]], bins=50)
             plt.stairs(hist, edges, label="{}".format(markers[i]))
