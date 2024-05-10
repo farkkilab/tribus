@@ -1,2 +1,2 @@
 [console_scripts]
-tribus = tribus.tribus:main
+tribus = tribus:main
