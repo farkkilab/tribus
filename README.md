@@ -2,39 +2,47 @@
 
 ## Installation
 
+* For setting up conda environment, please use ``tribus_environment.yml`` to install all the dependencies. Run in conda prompt window:
+
 ```
-   cd tribus/
-   python setup.py develop
-   pip install  -e ./
+conda env create --file=tribus_environment.yml
+# This environment allows you to run Tribus and repeat all the analyzes in the manuscript. 
 ```
 
-Or clone from GitHub repository.
+* We also provide a simplified environment `tribus_lightenv.yml` to run Tribus.
+* Clone from GitHub repository and run the following command in your conda environment of Tribus:
 
-For setting up conda environment, please use ``tribus_environment.yml``.
+```
+conda activate tribus
+
+cd tribus/
+python setup.py develop
+pip install  -e ./
+```
+
+Now you are ready to use Tribus!
 
 ## Usage instructions
 
 ### Tribus for cell type classification
 
-Example for running the labeling module through terminal:
+* We provide a jupyter notebook example. Please see example here: (coming soon)
+* Example datasets and more scripts could be downloaded from Synapse: (link coming soon)
 
-```
-    cd ../cool_project_name
-    tribus classify -i input_data/ -l gate_logic.xlsx -o tribus_results
-```
+#### Input dataset
 
-We also recommend using jupyter notebook for active interactions. Please see example here: (coming soon)
+#### Logic table
 
-Example datasets and more scripts could be found on Synapse: (link coming soon)
+#### Tribus visualization
 
-### Napari plugin for Tribus
+#### Napari plugin for fast user interaction
 
-    TODO instructions to open the napari notebook.
+We provide ` Fast_masking_v2_colors_fixed.ipynb` to run Napari plugin. 
 
 ## Folder structure
 
-Example of my test folder after using the `tribus classify` command:
-the input data and gate logic could be anywhere else in the computer as long as we put the correct path.
+Here is an example of folder structure:
+P.S. The input data and gate logic could be anywhere else in the computer as long as we specify the correct path when running Tribus.
 
 ```
     cool_project_name/
@@ -52,4 +60,4 @@ the input data and gate logic could be anywhere else in the computer as long as 
 
 ## Citing Tribus
 
-If you used Tribus in your research, please consider cite us: (DOI coming soon)
+If you used Tribus in your research, please consider cite us: [https://doi.org/10.1101/2024.03.13.584767](https://doi.org/10.1101/2024.03.13.584767)
