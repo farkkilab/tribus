@@ -1,4 +1,4 @@
-# Tribus: **Semi-automated panel-informed discovery of cell identities and phenotypes from multiplexed imaging and proteomic data**![img](./Tribus_workflow.png)
+# Tribus: **Semi-automated panel-informed discovery of cell identities and phenotypes from multiplexed imaging and proteomic data**![img](./figures/Tribus_workflow.png)
 
 ## Installation
 
@@ -9,7 +9,6 @@ conda env create --file=tribus_environment.yml
 # This environment allows you to run Tribus and repeat all the analyzes in the manuscript. 
 ```
 
-* We also provide a simplified environment `tribus_lightenv.yml` to run Tribus.
 * Clone from GitHub repository and run the following command in your conda environment of Tribus:
 
 ```
@@ -26,8 +25,8 @@ Now you are ready to use Tribus!
 
 ### Tribus for cell type classification
 
-* We provide a jupyter notebook example. Please see example here: (coming soon)
-* Example datasets and more scripts could be downloaded from Synapse: (link coming soon)
+* We provide a jupyter notebook example. Please see example `Tribus_run.ipynb`.
+* Example datasets and more scripts could be downloaded from Synapse with ID: `syn53754523`. 
 
 #### Input dataset
 
