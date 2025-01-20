@@ -88,13 +88,41 @@ Tribus provides some visualization functions. You can find examples in example `
 
 #### Napari plugin for fast user interaction
 
-We provide ` Fast_masking_v2_colors_fixed.ipynb` to run a fast Napari plugin. Run the chunks in the notebook and a napari window will pop out. You can check the quality of cell type calling and adjust the logic table correspondingly. 
+We provide `Tribus_napari_full_widget.ipynb` to run a fast napari plugin. Run the chunks in the notebook and a napari window will pop out. You can check the quality of cell type calling and adjust the logic table correspondingly by directly running Tribus through the napari interface or you can visualize previously assigned labels. 
 
-![img](./figures/napari_interface.png)
+* `Celltype_mask`: Visualizes assigned celltypes across the sample
+* `Marker_intensity_mask`: Visualizes selected marker intensity across the sample
+* `Probability_mask`: Visualizes Tribus's probability score per cell type
 
-We are also providing `Tribus_napari_full_widget.ipynb` for users to run Tribus directly in a Napari window! Here is a screenshot of the full interface. In order to use it, run the chunks in the notebook. 
+![img](./figures/Tribus-Napari.png) 
 
-![img](./figures/napari_full.JPG)
+#### Napari Inputs
+
+##### Image opener
+
+* `impath`: Path to your image with .tif/.tiff extension.
+* `channel list`: Path to an excel file containing a column ‘Channel_name’. This column should contain the name of your markers (image channels essentially) in the right order. 
+
+##### Run Tribus and display results directly
+
+* Select the masks you want to visulaize.
+* `marker`: Type the name of the marker for intensity masking (optional). The marker name has to exatly match the naming in the quantification table. 
+* You can set the paramters for Tribus (see `Tribus Parameter`section above).
+* `mask path`: Segmentation mask with .tif/.tiff extension.
+* `sample data`: Quantification .csv table, where the rows correspond to cells and the columns are features. 
+* `logic`: Tribus logic table (see `Logic Table` section above).
+* `output folder`: Folder path to save results.
+
+##### Visualizing existing data - Labels
+
+* `mask path`: Segmentation mask with .tif/.tiff extension.
+* `labels`: A .csv file containing labels for each cell. The table should have two columns, one named ‘ID’ which contains the cellIDs, and one ‘final_label’ which contains the assigned labels. Tribus produces output in this format, but if you are using different data, make sure your naming is correct. 
+
+##### Visualizing existing data - Intensities
+
+* `marker`: Type the name of the marker for intensity masking (optional). The marker name has to exatly match the naming in the quantification table.
+* `mask path`: Segmentation mask with .tif/.tiff extension.
+* `quantification`: Quantification .csv table, where the rows correspond to cells and the columns are features.
 
 ## Folder structure
 
