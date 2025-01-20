@@ -94,7 +94,7 @@ We provide `Tribus_napari_full_widget.ipynb` to run a fast napari plugin. Run th
 * `Marker_intensity_mask`: Visualizes selected marker intensity across the sample
 * `Probability_mask`: Visualizes Tribus's probability score per cell type
 
-![img](./figures/Tribus-Napari.png) 
+![](./figures/celltype_mask.gif)
 
 #### Napari Inputs
 
